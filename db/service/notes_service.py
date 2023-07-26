@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from db.model import Notes
+from db.dao.model.model import Notes
 from db.dao.notes_dao import NotesDAO
 
 class NotesService:

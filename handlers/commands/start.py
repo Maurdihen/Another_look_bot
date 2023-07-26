@@ -4,7 +4,7 @@ from sqlalchemy.exc import NoResultFound
 from bot_tg.loader import dp, bot
 from buttons.reply import menu_main
 
-from db.model import session
+from db.dao.model.model import session
 from db.service.users_service import UsersService
 
 users_service = UsersService(session)

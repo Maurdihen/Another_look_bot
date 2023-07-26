@@ -1,8 +1,6 @@
-from datetime import datetime
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from db.model import Users, Notes  # Замените "your_module_name" на имя вашего модуля с объявлением таблиц
+from db.dao.model.model import Users, Notes  # Замените "your_module_name" на имя вашего модуля с объявлением таблиц
 
 # Создаем соединение с базой данных
 engine = create_engine('sqlite:///notes.db')
