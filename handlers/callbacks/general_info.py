@@ -19,6 +19,7 @@ async def ind_cons_callback(callback_query: types.CallbackQuery):
     global cons
     cons = cd.parse(callback_query.data)["action"]
 
+
 @dp.callback_query_handler(cd.filter(action='mini_group'))
 async def mini_cons_callback(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
@@ -80,6 +81,7 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
     global subgroup
     subgroup = cd.parse(callback_query.data)["action"]
 
+
 @dp.callback_query_handler(cd.filter(action='this_week'))
 async def this_week_callback(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
@@ -102,6 +104,9 @@ async def next_week_callback(callback_query: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data.startswith('date_'))
 async def date_callback_function(callback_query: types.CallbackQuery):
+    if callback_query.data.split('_')[1] == "back":
+        await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
+        return
     selected_date = callback_query.data.split('_')[1]
     if cons == "ind_cons":
         conf = "индивидуальной"
