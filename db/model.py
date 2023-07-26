@@ -10,7 +10,7 @@ class Users(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer)
+    user_id_tg = Column(Integer)
     name = Column(String)
 
 
@@ -19,7 +19,7 @@ class Notes(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    date = Column(DateTime)
+    date = Column(String)
     time = Column(String)
     category = Column(String)
     sub_category = Column(String)
