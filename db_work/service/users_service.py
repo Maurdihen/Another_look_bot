@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
-from db.dao.model.model import Users
-from db.dao.users_dao import UsersDAO
+from db_work.dao.models.model import Users
+from db_work.dao.users_dao import UsersDAO
+
 
 class UsersService:
     def __init__(self, session: Session):

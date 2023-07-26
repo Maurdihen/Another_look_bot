@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
-from db.dao.model.model import Notes
-from db.dao.notes_dao import NotesDAO
+from db_work.dao.models.model import Notes
+from db_work.dao.notes_dao import NotesDAO
+
 
 class NotesService:
     def __init__(self, session: Session):

@@ -1,3 +1,4 @@
+from .callbacks import dp
 from .commands import dp
 from .mes_handlers import dp
 

@@ -19,6 +19,7 @@ async def ind_cons_callback(callback_query: types.CallbackQuery):
     global cons
     cons = cd.parse(callback_query.data)["action"]
 
+
 @dp.callback_query_handler(cd.filter(action='mini_group'))
 async def mini_cons_callback(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
