@@ -53,8 +53,4 @@ subgroup_them = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('Про отношения', callback_data=cd.new("about_relat"))],
     [InlineKeyboardButton('Самореализация', callback_data=cd.new("self_realization"))],
     [InlineKeyboardButton('Про финансы', callback_data=cd.new("finance"))]
-<<<<<<< HEAD
 ])
-=======
-])
->>>>>>> origin/main
