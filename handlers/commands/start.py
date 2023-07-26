@@ -4,7 +4,7 @@ from sqlalchemy.exc import NoResultFound
 from bot_tg.loader import dp, bot
 from buttons.reply import menu_main
 
-from bd.model import session, Users
+from db.model import session, Users
 
 
 @dp.message_handler(commands=['start'], state="*")
@@ -19,15 +19,15 @@ async def start_cmd(message: types.Message) -> None:
 
 
     try:
-        existing_user = session.query(Users).filter_by(user_id=message.from_user.id).first()
+        existing_user = session.query(Users).filter_by(user_id_tg=message.from_user.id).first()
 
         if not existing_user:
-            new_user = Users(user_id=message.from_user.id, name=user_name)
+            new_user = Users(user_id_tg=message.from_user.id, name=user_name)
             session.add(new_user)
             session.commit()
 
     except NoResultFound:
-        new_user = Users(user_id=message.from_user.id, name=user_name)
+        new_user = Users(user_id_tg=message.from_user.id, name=user_name)
         session.add(new_user)
         session.commit()
 
