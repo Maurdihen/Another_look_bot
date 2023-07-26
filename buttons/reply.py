@@ -1,6 +1,6 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
-general_inf = KeyboardButton('Общая информация')
+general_inf = KeyboardButton('Записаться')
 my_notes = KeyboardButton('Мои записи')
 
 menu_main = ReplyKeyboardMarkup(

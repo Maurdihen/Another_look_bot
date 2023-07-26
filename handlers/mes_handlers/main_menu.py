@@ -14,10 +14,8 @@ users_service = UsersService(session)
 notes_service = NotesService(session)
 
 
-@dp.message_handler(lambda message: message.text == "Общая информация")
+@dp.message_handler(lambda message: message.text == "Записаться")
 async def general_inf(message: types.Message):
-    await asyncio.sleep(0.5)
-
     try:
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
     except Exception as e:
@@ -25,7 +23,8 @@ async def general_inf(message: types.Message):
 
     await bot.send_message(
         chat_id=message.chat.id,
-        text="Тут какая-то общая информация",
+        text="В центре есть индивидуальные консультации по твоему запросу или курсы для тех, кому интересны темы личностного развития , взаимодействие в группе в безопасной среде.\n "
+             "Выбирай тот вариант, который тебе интересен🔽🔽🔽",
         parse_mode='html',
         reply_markup=general_info_markup
     )
