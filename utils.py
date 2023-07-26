@@ -12,7 +12,3 @@ def get_start_end_of_week(next_week=False):
         end_date = start_date + timedelta(days=6)
 
     return f"{start_date.strftime('%d.%m')} - {end_date.strftime('%d.%m')}"
-
-
-# Примеры использования функции:
-

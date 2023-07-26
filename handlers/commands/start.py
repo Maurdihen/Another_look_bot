@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import types
 from sqlalchemy.exc import NoResultFound
 
@@ -12,6 +14,11 @@ users_service = UsersService(session)
 
 @dp.message_handler(commands=['start'], state="*")
 async def start_cmd(message: types.Message) -> None:
+    try:
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    except Exception as e:
+        print("Ошибка при удалении сообщения:", e)
+
     user_first_name = message.from_user.first_name
     user_last_name = message.from_user.last_name
 
@@ -31,12 +38,8 @@ async def start_cmd(message: types.Message) -> None:
 
     await bot.send_message(
         chat_id=message.chat.id,
-        text="Привет, это бот в котором ты сможешь записаться на встречу",
+        text="Привет! Это бот центра  психологии и развития молодежи «Другой взгляд» 👋\n"
+             "Здесь ты можешь записаться на индивидуальную консультацию к психологу или на тематический курс 📝",
         parse_mode='html',
         reply_markup=menu_main
     )
-
-    try:
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    except Exception as e:
-        print("Ошибка при удалении сообщения:", e)
