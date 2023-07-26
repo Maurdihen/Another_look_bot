@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from db.dao.model.model import Users, Notes  # Замените "your_module_name" на имя вашего модуля с объявлением таблиц
+from db_work.dao.models.model import Users, Notes  # Замените "your_module_name" на имя вашего модуля с объявлением таблиц
 
 # Создаем соединение с базой данных
-engine = create_engine('sqlite:///notes.db')
+engine = create_engine('sqlite:///notes.db_work')
 
 # Создаем сессию
 Session = sessionmaker(bind=engine)
