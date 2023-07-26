@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from db.model import Users
+from db.dao.model.model import Users
 from db.dao.users_dao import UsersDAO
 
 class UsersService:

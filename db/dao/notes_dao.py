@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from db.model import Notes
+from db.dao.model.model import Notes
 
 class NotesDAO:
     def __init__(self, session: Session):

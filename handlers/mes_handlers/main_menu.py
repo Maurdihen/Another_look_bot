@@ -4,7 +4,7 @@ from aiogram import types
 
 from bot_tg.loader import dp, bot
 from buttons.inlines import general_info_markup
-from db.model import session
+from db.dao.model.model import session
 from db.service.notes_service import NotesService
 from db.service.users_service import UsersService
 
