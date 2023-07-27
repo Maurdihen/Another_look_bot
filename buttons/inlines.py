@@ -44,18 +44,18 @@ this_weeks_button_list.append(back_button)
 this_weeks_button_markup = InlineKeyboardMarkup(row_width=7).add(*this_weeks_button_list)
 
 # Next Week's Keyboard Markup
-# next_week_today = today + datetime.timedelta(days=7)
-# next_current_month = next_week_today.month
-# next_weeks_button_list = [
-#     InlineKeyboardButton(f"🗓️ {next_date.strftime('%d')}",
-#                          callback_data=f"date_{next_date.strftime('%d.%m.%Y')}")
-#     for next_date in [next_week_today + datetime.timedelta(days=i) for i in range(7)]
-# ]
-#
-# back_button = InlineKeyboardButton("⬅️ Назад", callback_data="date_back")
-# next_weeks_button_list.append(back_button)
-#
-# next_weeks_button_markup = InlineKeyboardMarkup(row_width=7).add(*next_weeks_button_list)
+next_week_today = today + datetime.timedelta(days=7)
+next_current_month = next_week_today.month
+next_weeks_button_list = [
+    InlineKeyboardButton(f"🗓️ {next_date.strftime('%d')}",
+                         callback_data=f"date_{next_date.strftime('%d.%m.%Y')}")
+    for next_date in [next_week_today + datetime.timedelta(days=i) for i in range(7)]
+]
+
+back_button = InlineKeyboardButton("⬅️ Назад", callback_data="date_back")
+next_weeks_button_list.append(back_button)
+
+next_weeks_button_markup = InlineKeyboardMarkup(row_width=7).add(*next_weeks_button_list)
 
 
 subgroup_them = InlineKeyboardMarkup(inline_keyboard=[
