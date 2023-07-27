@@ -1,7 +1,7 @@
 from aiogram import types
 
 from bot_tg.loader import dp, bot
-from buttons.inlines import week_button_markup, this_weeks_button_markup, cd, subgroup_them, next_weeks_button_markup
+from buttons.inlines import week_button_markup, this_weeks_button_markup, cd, subgroup_them
 
 cons = None
 subgroup = None
@@ -104,24 +104,24 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
     subgroup = cd.parse(callback_query.data)["action"]
 
 
-@dp.callback_query_handler(cd.filter(action='this_week'))
-async def this_week_callback(callback_query: types.CallbackQuery):
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(
-        callback_query.from_user.id,
-        'Выберите в какой день хотите провести встречу',
-        reply_markup=this_weeks_button_markup
-    )
+# @dp.callback_query_handler(cd.filter(action='this_week'))
+# async def this_week_callback(callback_query: types.CallbackQuery):
+#     await bot.answer_callback_query(callback_query.id)
+#     await bot.send_message(
+#         callback_query.from_user.id,
+#         'Выберите в какой день хотите провести встречу',
+#         reply_markup=this_weeks_button_markup
+#     )
 
 
-@dp.callback_query_handler(cd.filter(action='next_week'))
-async def next_week_callback(callback_query: types.CallbackQuery):
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(
-        callback_query.from_user.id,
-        'Выберите в какой день хотите провести встречу',
-        reply_markup=next_weeks_button_markup
-    )
+# @dp.callback_query_handler(cd.filter(action='next_week'))
+# async def next_week_callback(callback_query: types.CallbackQuery):
+#     await bot.answer_callback_query(callback_query.id)
+#     await bot.send_message(
+#         callback_query.from_user.id,
+#         'Выберите в какой день хотите провести встречу',
+#         reply_markup=next_weeks_button_markup
+#     )
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('date_'))
