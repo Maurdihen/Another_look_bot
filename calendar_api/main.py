@@ -1,5 +1,6 @@
 import os
 import datetime as dt
+from pprint import pprint
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -10,16 +11,17 @@ from googleapiclient.errors import HttpError
 
 class Calendar:
     _creds = None
+    _calendar_id: str = "e8738f011308538b82943abd6ce80684786b0c85d7c3a563c0fb5e916c52d051@group.calendar.google.com"
 
     @staticmethod
-    def _load_credentials():
-        """Загрузка учетных данных из файла "token.json" (если он существует)."""
+    def _load_credentials() -> None:
+        """Загрузка учетных данных из файла "token.json" (если он существует)"""
         if os.path.exists("token.json"):
             Calendar._creds = Credentials.from_authorized_user_file("token.json")
 
     @staticmethod
-    def _get_credentials():
-        """Получение действительных учетных данных или обновление их, если они просрочены."""
+    def _get_credentials() -> None:
+        """Получение действительных учетных данных или обновление их, если они просрочены"""
         if not Calendar._creds or not Calendar._creds.valid:
             if Calendar._creds and Calendar._creds.expired and Calendar._creds.refresh_token:
                 Calendar._creds.refresh(Request())
@@ -31,84 +33,137 @@ class Calendar:
                 token.write(Calendar._creds.to_json())
 
     @classmethod
-    def create_calendar_event(cls, event_data):
-        """
-        Создает новое событие в Google Calendar API с помощью данных event_data.
-        """
-        cls._load_credentials()
-        cls._get_credentials()
-        try:
-            service = build("calendar", "v3", credentials=Calendar._creds)
+    def _output(cls, events):
+        all_events = []
 
-            event = service.events().insert(
-                calendarId='e8738f011308538b82943abd6ce80684786b0c85d7c3a563c0fb5e916c52d051@group.calendar.google.com',
-                body=event_data
-            ).execute()
+        if not events:
+            return []
 
-            print(f"Event created: {event.get('htmlLink')}")
+        for event in events:
 
-        except HttpError as error:
-            print("An error occurred:", error)
+            if event['summary'] == "Индивидуальная встреча":
+                continue
+
+            events_dict = {}
+            start = event["start"].get("dateTime")
+            end = event["end"].get("dateTime")
+
+            events_dict["summary"] = event["summary"]
+            events_dict["date"] = {
+                "day": start[8:10],
+                "month": start[5:7],
+                "year": start[:4],
+            }
+            events_dict["startTime"] = start[11:19]
+            events_dict["endTime"] = end[11:19]
+
+            all_events.append(events_dict)
+        return all_events
 
     @classmethod
-    def check_calendar(cls):
-        """
-        Проверяет ближайшие события в календаре "primary" с использованием учетных данных Calendar._creds.
-        """
+    def check_calendar(cls, start_time) -> dict or None:
+        """Проверяет ближайшие события в календаре с использованием учетных данных Calendar._creds"""
         cls._load_credentials()
         cls._get_credentials()
         try:
             service = build("calendar", "v3", credentials=Calendar._creds)
 
-            now = dt.datetime.now().isoformat() + "Z"
+            next_day = dt.datetime.fromisoformat(start_time[:-6]) + dt.timedelta(days=1)
+            end_time = next_day.isoformat() + "+03:00"
 
             event_result = service.events().list(
-                calendarId="primary",
-                timeMin=now, maxResults=10,
+                calendarId=Calendar._calendar_id,
+                timeMin=start_time,
+                timeMax=end_time,
                 singleEvents=True,
-                orderBy="startTime"
+                orderBy="startTime",
             ).execute()
 
             events = event_result.get("items", [])
 
-            if not events:
-                print("No upcoming events found!")
-                return
+            return Calendar._output(events)
 
-            print("Upcoming events:")
-            for event in events:
-                # print(event)
-                start = event["start"].get("dateTime", event["start"].get("date"))
-                print(start, event["summary"])
+        except HttpError as error:
+            print("An error occurred:", error)
+            return
+
+    @classmethod
+    def create_calendar_event(cls, data: dict) -> True or None:
+        """Создает новое событие в Google Calendar с помощью данных event_data"""
+        cls._load_credentials()
+        cls._get_credentials()
+
+        event_data: dict = {
+            "summary": f"{data['summary']}",
+            "location": "Чебоксары",
+            "description": f"{data['name']} - {data['phone_number']}",
+            "colorId": 9,
+            "start": {
+                "dateTime": f"{data['start']}",
+                "timeZone": "Europe/Moscow"
+            },
+            "end": {
+                "dateTime": f"{data['end']}",
+                "timeZone": "Europe/Moscow"
+            },
+            "recurrence": [
+                "RRULE:FREQ=DAILY;COUNT=1"
+            ]
+        }
+
+        try:
+            service = build("calendar", "v3", credentials=Calendar._creds)
+            Calendar._delete_event(service=service, start=data['start'], end=data['end'])
+            event = service.events().insert(
+                calendarId=Calendar._calendar_id,
+                body=event_data
+            ).execute()
+
+
+            print(f"Event created: {event.get('htmlLink')}")
+
+            return event['id']
 
         except HttpError as error:
             print("An error occurred:", error)
 
+            return
 
-# name, phone number, start-end, summary
+    @classmethod
+    def _delete_event(cls, service, start: str, end: str) -> None:
+        events = service.events().list(
+            calendarId=Calendar._calendar_id,
+            timeMin=start,
+            timeMax=end,
+            maxResults=10,
+            singleEvents=True
+        ).execute()
+
+        if 'items' in events:
+            for event in events['items']:
+                service.events().delete(calendarId=Calendar._calendar_id, eventId=event['id']).execute()
+                print(f"Event with ID '{event['id']}' has been deleted.")
+        else:
+            print("No events found in the specified date and time range.")
+
+    @classmethod
+    def delete_user_event(cls, eid: str):
+        cls._load_credentials()
+        cls._get_credentials()
+        try:
+            service = build("calendar", "v3", credentials=Calendar._creds)
+            service.events().delete(calendarId=Calendar._calendar_id, eventId=eid).execute()
+        except HttpError as error:
+            print("error", error)
+
+
+data: dict = {
+    "summary": 'Индивидуальная встреча',
+    "name": 'Денис',
+    "phone_number": '89278685655',
+    "start": "2023-07-29T17:00:00+03:00",
+    "end": "2023-07-29T18:00:00+03:00",
+}
+
 if __name__ == "__main__":
-    event_data = {
-        "summary": "Индивидуальная встреча",
-        "location": "Чебоксары",
-        "description": "Проблемы с личной жизнью",
-        "colorId": 5,
-        "start": {
-            "dateTime": "2023-07-25T17:30:00+03:00",
-            "timeZone": "Europe/Moscow"
-        },
-        "end": {
-            "dateTime": "2023-07-25T19:30:00+03:00",
-            "timeZone": "Europe/Moscow"
-        },
-        "recurrence": [
-            "RRULE:FREQ=DAILY;COUNT=1"
-        ],
-        # "attendees": [
-        #     {"email": "pashenka.kuzmin.2006@gmail.com"},
-        # ],
-    }
-
-    # Создание события в календаре
-    # Calendar.create_calendar_event(event_data)
-    # Просмотр календаря
-    # Calendar.check_calendar()
+    print(Calendar.create_calendar_event(data))
