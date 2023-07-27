@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import types
 from sqlalchemy.exc import NoResultFound
 
