@@ -119,7 +119,6 @@ class Calendar:
                 body=event_data
             ).execute()
 
-
             print(f"Event created: {event.get('htmlLink')}")
 
             return event['id']
@@ -146,6 +145,7 @@ class Calendar:
         else:
             print("No events found in the specified date and time range.")
 
+            
     @classmethod
     def delete_user_event(cls, eid: str):
         cls._load_credentials()
