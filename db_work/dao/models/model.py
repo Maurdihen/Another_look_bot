@@ -30,7 +30,7 @@ class Notes(Base):
 
 Users.notes = relationship("Notes", back_populates="user")
 
-engine = create_engine('sqlite:///notes.db_work')
+engine = create_engine('sqlite:///notes.db')
 Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
