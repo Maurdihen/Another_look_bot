@@ -2,6 +2,7 @@ from aiogram import types
 from sqlalchemy.exc import NoResultFound
 
 from bot_tg.loader import dp, bot
+from buttons.inlines import connect
 from buttons.reply import menu_main
 
 from db_work.setup_db import session
