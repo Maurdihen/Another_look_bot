@@ -59,8 +59,3 @@ async def my_notes(message: types.Message):
         text=list_user_notes,
         parse_mode='html'
     )
-
-
-@dp.message_handler(content_types=['contact'])
-async def my_number(message: types.Message):
-    print(message.contact)
