@@ -24,19 +24,31 @@ week_button_markup = InlineKeyboardMarkup(inline_keyboard=[
 today = datetime.date.today()
 current_month = today.month
 
-# Функция для проверки, является ли день воскресеньем
-def is_sunday(date):
-    return date.weekday() == 6
-
 # Создание списка кнопок с датой или "-"
 this_weeks_button_list = []
+cnt = 0
+day_of_week_short = {
+    0: "Пн",
+    1: "Вт",
+    2: "Ср",
+    3: "Чт",
+    4: "Пт",
+    5: "Сб"
+}
 for i in range(7):
-    date = today + datetime.timedelta(days=i)
-    if not is_sunday(date):
-        this_weeks_button_list.append(InlineKeyboardButton(f"🗓️ {date.strftime('%d')}",
+    date = today + datetime.timedelta(days=cnt)
+    if date.weekday() != 6:
+        day_num = date.weekday()
+        this_weeks_button_list.append(InlineKeyboardButton(f"🗓️{day_of_week_short[day_num]}-{date.strftime('%d')}",
                                                                 callback_data=f"date_{date.strftime('%d.%m.%Y')}"))
+        cnt += 1
     else:
-        this_weeks_button_list.append(InlineKeyboardButton("-", callback_data="date_skip"))
+        cnt += 1
+        date = today + datetime.timedelta(days=cnt)
+        day_num = date.weekday()
+        this_weeks_button_list.append(InlineKeyboardButton(f"🗓️{day_of_week_short[day_num]}-{date.strftime('%d')}",
+                                                           callback_data=f"date_{date.strftime('%d.%m.%Y')}"))
+        cnt += 1
 
 back_button = InlineKeyboardButton("⬅️ Назад", callback_data="date_back")
 this_weeks_button_list.append(back_button)
@@ -59,7 +71,15 @@ this_weeks_button_markup = InlineKeyboardMarkup(row_width=7).add(*this_weeks_but
 
 
 subgroup_them = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton('Про отношения', callback_data=cd.new("about_relat"))],
-    [InlineKeyboardButton('Самореализация', callback_data=cd.new("self_realization"))],
-    [InlineKeyboardButton('Про финансы', callback_data=cd.new("finance"))]
+    [InlineKeyboardButton('Про отношения', callback_data=cd.new("about_relat")),
+     InlineKeyboardButton('Самореализация', callback_data=cd.new("self_realization")),
+     InlineKeyboardButton('Про финансы', callback_data=cd.new("finance"))],
+    [InlineKeyboardButton('⬅️ Назад', callback_data="date_back")]
+])
+
+
+
+enroll = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton('Записаться', callback_data=cd.new("enroll"))],
+    [InlineKeyboardButton('⬅️ Назад', callback_data="date_back")]
 ])

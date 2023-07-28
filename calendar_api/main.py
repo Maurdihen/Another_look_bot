@@ -1,5 +1,6 @@
 import os
 import datetime as dt
+from pprint import pprint
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -10,7 +11,7 @@ from googleapiclient.errors import HttpError
 
 class Calendar:
     _creds = None
-    _calendar_id: str = "428b4202a71e0d29b1a141655d57bb45eb133fd629e0c84155e1d4bfa7627fa6@group.calendar.google.com"
+    _calendar_id: str = "e8738f011308538b82943abd6ce80684786b0c85d7c3a563c0fb5e916c52d051@group.calendar.google.com"
 
     @staticmethod
     def _load_credentials() -> None:
@@ -32,20 +33,18 @@ class Calendar:
                 token.write(Calendar._creds.to_json())
 
     @classmethod
-    def output(cls, events) -> list:
+    def _output(cls, events):
         all_events = []
 
         if not events:
-            print("No upcoming events found")
-
-            return all_events
+            return []
 
         for event in events:
+
             if event['summary'] == "Индивидуальная встреча":
                 continue
 
             events_dict = {}
-
             start = event["start"].get("dateTime")
             end = event["end"].get("dateTime")
 
@@ -62,29 +61,30 @@ class Calendar:
         return all_events
 
     @classmethod
-    def check_calendar(cls) -> list or None:
+    def check_calendar(cls, start_time) -> dict or None:
         """Проверяет ближайшие события в календаре с использованием учетных данных Calendar._creds"""
         cls._load_credentials()
         cls._get_credentials()
         try:
             service = build("calendar", "v3", credentials=Calendar._creds)
 
-            now = dt.datetime.now().isoformat() + "Z"
+            next_day = dt.datetime.fromisoformat(start_time[:-6]) + dt.timedelta(days=1)
+            end_time = next_day.isoformat() + "+03:00"
 
             event_result = service.events().list(
                 calendarId=Calendar._calendar_id,
-                timeMin=now, maxResults=10,
+                timeMin=start_time,
+                timeMax=end_time,
                 singleEvents=True,
                 orderBy="startTime",
             ).execute()
 
             events = event_result.get("items", [])
 
-            return cls.output(events=events)
+            return Calendar._output(events)
 
         except HttpError as error:
             print("An error occurred:", error)
-
             return
 
     @classmethod
@@ -113,14 +113,15 @@ class Calendar:
 
         try:
             service = build("calendar", "v3", credentials=Calendar._creds)
-            Calendar.delete_event(service=service, start=data['start'], end=data['end'])
+            Calendar._delete_event(service=service, start=data['start'], end=data['end'])
             event = service.events().insert(
                 calendarId=Calendar._calendar_id,
                 body=event_data
             ).execute()
+
             print(f"Event created: {event.get('htmlLink')}")
 
-            return True
+            return event['id']
 
         except HttpError as error:
             print("An error occurred:", error)
@@ -128,7 +129,7 @@ class Calendar:
             return
 
     @classmethod
-    def delete_event(cls, service, start: str, end: str) -> None:
+    def _delete_event(cls, service, start: str, end: str) -> None:
         events = service.events().list(
             calendarId=Calendar._calendar_id,
             timeMin=start,
@@ -144,8 +145,19 @@ class Calendar:
         else:
             print("No events found in the specified date and time range.")
 
+            
+    @classmethod
+    def delete_user_event(cls, eid: str):
+        cls._load_credentials()
+        cls._get_credentials()
+        try:
+            service = build("calendar", "v3", credentials=Calendar._creds)
+            service.events().delete(calendarId=Calendar._calendar_id, eventId=eid).execute()
+        except HttpError as error:
+            print("error", error)
 
-data_from_person: dict = {
+
+data: dict = {
     "summary": 'Индивидуальная встреча',
     "name": 'Денис',
     "phone_number": '89278685655',
@@ -154,5 +166,4 @@ data_from_person: dict = {
 }
 
 if __name__ == "__main__":
-    Calendar.create_calendar_event(data=data_from_person)
-    print(Calendar.check_calendar())
+    print(Calendar.create_calendar_event(data))
