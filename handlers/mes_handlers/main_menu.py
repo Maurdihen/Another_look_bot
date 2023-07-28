@@ -53,7 +53,7 @@ async def my_notes(message: types.Message):
                f"День встречи: {note.date}\n" \
                f"Время встречи: {note.time}" \
 
-        list_user_notes.append((f"Note ID: {note.id}", info))
+        list_user_notes.append(({"note_id": note.id}, info))
 
     await bot.send_message(
         chat_id=message.chat.id,
