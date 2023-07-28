@@ -2,6 +2,8 @@ from aiogram import types
 
 from bot_tg.loader import dp, bot
 from buttons.inlines import week_button_markup, this_weeks_button_markup, cd, subgroup_them, enroll
+from calendar_api.main import Calendar
+from utils import convert_date
 
 cons = None
 subgroup = None
@@ -139,12 +141,23 @@ async def date_callback_function(callback_query: types.CallbackQuery):
         await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
         return
     selected_date = callback_query.data.split('_')[1]
+    date = convert_date(selected_date)
+    print(date)
+    print(Calendar.check_calendar(date))
     if cons == "ind_cons":
-        conf = "индивидуальной"
+        conf = "Индивидуальная встреча"
     elif cons == "mini_group":
-        conf = "мини групп"
+        conf = "Мини группа"
     else:
-        conf = "Тематической"
+        conf = "Тематическая группа"
     if subgroup:
         print(subgroup)
+    data = {
+        "summary": conf,
+        "name": callback_query.from_user.full_name,
+        "phone_number": '89278685655',
+        "start": "2023-07-29T21:00:00+03:00",
+        "end": "2023-07-29T22:00:00+03:00",
+    }
+    Calendar.create_calendar_event(data)
     await bot.answer_callback_query(callback_query.id, text=f"Вы выбрали день {selected_date} для {conf} встречи!")
