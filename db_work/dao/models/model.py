@@ -1,10 +1,8 @@
-from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Column, Integer, String
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+from db_work.setup_db import Base
 
 
 class Users(Base):
@@ -29,9 +27,3 @@ class Notes(Base):
 
 
 Users.notes = relationship("Notes", back_populates="user")
-
-engine = create_engine('sqlite:///notes.db')
-Base.metadata.create_all(engine)
-
-Session = sessionmaker(bind=engine)
-session = Session()
