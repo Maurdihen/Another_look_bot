@@ -1,7 +1,7 @@
 from aiogram import types
 
 from bot_tg.loader import dp, bot
-from buttons.inlines import week_button_markup, this_weeks_button_markup, cd, subgroup_them
+from buttons.inlines import week_button_markup, this_weeks_button_markup, cd, subgroup_them, enroll
 
 cons = None
 subgroup = None
@@ -18,13 +18,22 @@ async def ind_cons_callback(callback_query: types.CallbackQuery):
         'ℹ️Работа по изменению структуры личности требует регулярных встреч.\n\n'
         'ℹ️Короткий ситуационный запрос подразумевает от 4 до 8 консультаций.\n\n'
         'Бережно. Конфиденциально.\n\n'
-        'Приходи , я рада тебе 🤍\n\n'
-        'Запись ведется на следующую неделю. Выберете подходящий день и время 🕙',
-        reply_markup=this_weeks_button_markup
+        'Приходи , я рада тебе 🤍',
+        reply_markup=enroll
     )
 
     global cons
     cons = cd.parse(callback_query.data)["action"]
+
+
+@dp.callback_query_handler(cd.filter(action="enroll"))
+async def enroll_callback(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await bot.send_message(
+        callback_query.from_user.id,
+        'Запись ведется на следующую неделю. Выберете подходящий день и время 🕙',
+        reply_markup=this_weeks_button_markup
+    )
 
 
 @dp.callback_query_handler(cd.filter(action='mini_group'))
@@ -35,7 +44,7 @@ async def mini_cons_callback(callback_query: types.CallbackQuery):
         "Мини-группа предназначена для глубокой и активной работы по заданной теме.\n\n"
         "В группе принимают участие до 4 человек.\n\n"
         "Присоединиться к ближайшей группе по актуальной для тебя теме можно здесь 🔽🔽🔽",
-        reply_markup=week_button_markup
+        reply_markup=enroll
     )
     global cons
     cons = cd.parse(callback_query.data)["action"]
@@ -69,7 +78,7 @@ async def subgroup_relat_them_callback(callback_query: types.CallbackQuery):
         '- Этапы развития романтических отношений \n'
         '- Блищость духовная и физическая\n'
         'Мужской и женский взгляд 👀 комфортная скорость для привнесения теории в жизнь. Online',
-        reply_markup=week_button_markup
+        reply_markup=enroll
     )
     global subgroup
     subgroup = cd.parse(callback_query.data)["action"]
@@ -84,7 +93,7 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
         'Курс «В ритме собственной души». Работа в закрытой группе с возможность индивидуальной обратной связи. '
         'Будем исследовать свои сильные слабые стороны, свою собственную «магию» жизни, талантов, призвания и '
         'скоростей. Встречи каждые 3 недели. Online',
-        reply_markup=week_button_markup
+        reply_markup=enroll
     )
     global subgroup
     subgroup = cd.parse(callback_query.data)["action"]
@@ -98,7 +107,7 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
         'Курс Pro финансы .\n\n'
         'Динамическая группа для тех, кто хочет раскачать свое финансовое поле. Встречи 1 раз в месяц, закрытая группа '
         'с собственной траекторией ближайшего развития. 6 встреч = 6 месяцев. Online.',
-        reply_markup=week_button_markup
+        reply_markup=enroll
     )
     global subgroup
     subgroup = cd.parse(callback_query.data)["action"]
