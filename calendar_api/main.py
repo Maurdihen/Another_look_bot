@@ -112,6 +112,11 @@ class Calendar:
         cls._load_credentials()
         cls._get_credentials()
 
+        # if data['summary'] == 'Индивидуальная встреча':
+        #     calendar_id = Calendar._in_calendar_id
+        # elif data['summary'] == 'Групповые занятия':
+        #     calendar_id = Calendar._gr_calendar_id
+
         event_data: dict = {
             "summary": f"{data['summary']}",
             "location": "Чебоксары",
@@ -176,4 +181,3 @@ class Calendar:
 
 if __name__ == "__main__":
     print(Calendar.check_calendar("2023-07-29T18:00:00+03:00"))
-    # print(Calendar.create_calendar_event(data=data))
