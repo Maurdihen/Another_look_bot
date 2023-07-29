@@ -76,10 +76,17 @@ class Calendar:
         cls._load_credentials()
         cls._get_credentials()
         try:
+
             service = build("calendar", "v3", credentials=Calendar._creds)
 
             next_day = dt.datetime.fromisoformat(start_time[:-6]) + dt.timedelta(days=1)
             end_time = next_day.isoformat() + "+03:00"
+
+            today = dt.datetime.utcnow().isoformat()[8:10]
+            day = start_time[8:10]
+
+            if today == day:
+                end_time = start_time[:10] + "T" + "23:59:59" + "+03:00"
 
             event_result = service.events().list(
                 calendarId=Calendar._in_calendar_id,
@@ -111,6 +118,11 @@ class Calendar:
         """
         cls._load_credentials()
         cls._get_credentials()
+
+        # if data['summary'] == 'Индивидуальная встреча':
+        #     calendar_id = Calendar._in_calendar_id
+        # elif data['summary'] == 'Групповые занятия':
+        #     calendar_id = Calendar._gr_calendar_id
 
         event_data: dict = {
             "summary": f"{data['summary']}",
@@ -176,4 +188,3 @@ class Calendar:
 
 if __name__ == "__main__":
     print(Calendar.check_calendar("2023-07-29T18:00:00+03:00"))
-    # print(Calendar.create_calendar_event(data=data))
