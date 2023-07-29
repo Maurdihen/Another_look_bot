@@ -47,24 +47,27 @@ class Calendar:
             return []
 
         for event in events:
+            transparency = event.get("transparency")
 
-            if event['summary'] == "Индивидуальная встреча":
+            if transparency is None:
                 continue
+            else:
+                events_dict = {}
+                start = event["start"].get("dateTime")
+                end = event["end"].get("dateTime")
 
-            events_dict = {}
-            start = event["start"].get("dateTime")
-            end = event["end"].get("dateTime")
+                events_dict["summary"] = event["summary"]
+                events_dict["date"] = {
+                    "day": start[8:10],
+                    "month": start[5:7],
+                    "year": start[:4],
+                }
+                events_dict["startTime"] = start[11:19]
+                events_dict["endTime"] = end[11:19]
+                events_dict["transparency"] = transparency
 
-            events_dict["summary"] = event["summary"]
-            events_dict["date"] = {
-                "day": start[8:10],
-                "month": start[5:7],
-                "year": start[:4],
-            }
-            events_dict["startTime"] = start[11:19]
-            events_dict["endTime"] = end[11:19]
+                all_events.append(events_dict)
 
-            all_events.append(events_dict)
         return all_events
 
     @classmethod
@@ -96,7 +99,16 @@ class Calendar:
 
     @classmethod
     def create_calendar_event(cls, data: dict) -> True or None:
-        """Создает новое событие в Google Calendar с помощью данных event_data"""
+        """
+        Создает новое событие в Google Calendar с помощью данных event_data
+        data = {
+            "summary": 'Индивидуальная встреча',
+            "name": 'Денис',
+            "phone_number": '89278685655',
+            "start": "2023-07-29T18:00:00+03:00",
+            "end": "2023-07-29T19:00:00+03:00",
+            }
+        """
         cls._load_credentials()
         cls._get_credentials()
 
@@ -104,7 +116,6 @@ class Calendar:
             "summary": f"{data['summary']}",
             "location": "Чебоксары",
             "description": f"{data['name']} - {data['phone_number']}",
-            "colorId": 9,
             "start": {
                 "dateTime": f"{data['start']}",
                 "timeZone": "Europe/Moscow"
@@ -115,7 +126,7 @@ class Calendar:
             },
             "recurrence": [
                 "RRULE:FREQ=DAILY;COUNT=1"
-            ]
+            ],
         }
 
         try:
@@ -163,14 +174,6 @@ class Calendar:
             print("error", error)
 
 
-data: dict = {
-    "summary": 'Индивидуальная встреча',
-    "name": 'Денис',
-    "phone_number": '89278685655',
-    "start": "2023-07-29T17:00:00+03:00",
-    "end": "2023-07-29T18:00:00+03:00",
-}
-
 if __name__ == "__main__":
-    print(Calendar.check_calendar("2023-07-29T13:00:00+03:00"))
-    print(Calendar.create_calendar_event(data=data))
+    print(Calendar.check_calendar("2023-07-29T18:00:00+03:00"))
+    # print(Calendar.create_calendar_event(data=data))
