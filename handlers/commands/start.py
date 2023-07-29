@@ -9,10 +9,12 @@ from db_work.setup_db import session
 from db_work.service.users_service import UsersService
 
 users_service = UsersService(session)
+from aiogram.dispatcher import FSMContext
 
 
 @dp.message_handler(commands=['start'], state="*")
-async def start_cmd(message: types.Message) -> None:
+async def start_cmd(message: types.Message, state: FSMContext) -> None:
+    await state.reset_state()
     try:
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
     except Exception as e:
