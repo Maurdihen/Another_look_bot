@@ -76,10 +76,17 @@ class Calendar:
         cls._load_credentials()
         cls._get_credentials()
         try:
+
             service = build("calendar", "v3", credentials=Calendar._creds)
 
             next_day = dt.datetime.fromisoformat(start_time[:-6]) + dt.timedelta(days=1)
             end_time = next_day.isoformat() + "+03:00"
+
+            today = dt.datetime.utcnow().isoformat()[8:10]
+            day = start_time[8:10]
+
+            if today == day:
+                end_time = start_time[:10] + "T" + "23:59:59" + "+03:00"
 
             event_result = service.events().list(
                 calendarId=Calendar._in_calendar_id,
