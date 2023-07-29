@@ -1,10 +1,17 @@
 from aiogram import types
+from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot_tg.loader import dp, bot
-from buttons.inlines import week_button_markup, this_weeks_button_markup, cd, subgroup_them, enroll
+from buttons.inlines import this_weeks_button_markup, cd, subgroup_them, enroll, next_
+from buttons.reply import number
+from calendar_api.main import Calendar
+from utils import convert_date
+from states import UserStates
 
 cons = None
 subgroup = None
+events = None
+event = None
 
 
 @dp.callback_query_handler(cd.filter(action="ind_cons"))
@@ -113,38 +120,56 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
     subgroup = cd.parse(callback_query.data)["action"]
 
 
-# @dp.callback_query_handler(cd.filter(action='this_week'))
-# async def this_week_callback(callback_query: types.CallbackQuery):
-#     await bot.answer_callback_query(callback_query.id)
-#     await bot.send_message(
-#         callback_query.from_user.id,
-#         'Выберите в какой день хотите провести встречу',
-#         reply_markup=this_weeks_button_markup
-#     )
-
-
-# @dp.callback_query_handler(cd.filter(action='next_week'))
-# async def next_week_callback(callback_query: types.CallbackQuery):
-#     await bot.answer_callback_query(callback_query.id)
-#     await bot.send_message(
-#         callback_query.from_user.id,
-#         'Выберите в какой день хотите провести встречу',
-#         reply_markup=next_weeks_button_markup
-#     )
-
-
 @dp.callback_query_handler(lambda c: c.data.startswith('date_'))
 async def date_callback_function(callback_query: types.CallbackQuery):
     if callback_query.data.split('_')[1] == "back":
         await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
         return
+
     selected_date = callback_query.data.split('_')[1]
-    if cons == "ind_cons":
-        conf = "индивидуальной"
-    elif cons == "mini_group":
-        conf = "мини групп"
+    date = convert_date(selected_date) + "+03:00"
+
+    global events
+    events = Calendar.check_calendar(date)
+
+    if len(events) == 0:
+        await bot.send_message(callback_query.from_user.id, text="Сори в этот день нет свободных слотов")
+        return
+
+    await bot.send_message(callback_query.from_user.id, text="Вы можете записаться в такие слоты:")
+    await bot.send_message(callback_query.from_user.id, text=events[0], reply_markup=next_)
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith('next_'))
+async def next_callback(callback_query: types.CallbackQuery):
+    message_number = int(callback_query.data.split('_')[1])
+
+    if callback_query.data.split('_')[2] == "signup":
+        await bot.send_message(callback_query.from_user.id, text="Для того чтобы бот смог вас записать отправте "
+                                                                 "пожалуйста своё имя и фамилию в формате Имя Фамилия")
+        global event
+        event = events[int(callback_query.data.split('_')[1])]
+        print(event, int(callback_query.data.split('_')[1]))
+        await UserStates.GetNumber.set()
+        return
+    elif callback_query.data.split('_')[2] == "back":
+        next_message_number = message_number - 1
     else:
-        conf = "Тематической"
-    if subgroup:
-        print(subgroup)
-    await bot.answer_callback_query(callback_query.id, text=f"Вы выбрали день {selected_date} для {conf} встречи!")
+        next_message_number = message_number + 1
+
+    if len(events) > next_message_number >= 0:
+        next_ = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton("Далее", callback_data=f'next_{next_message_number}_next')],
+            [InlineKeyboardButton("Записаться", callback_data=f'next_{next_message_number}_signup')],
+            [InlineKeyboardButton("Назад", callback_data=f'next_{next_message_number}_back')],
+        ])
+
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            text=events[next_message_number],
+            reply_markup=next_,
+            parse_mode=ParseMode.MARKDOWN,
+        )
+    else:
+        await bot.answer_callback_query(callback_query.id, "Это последнее запись.")

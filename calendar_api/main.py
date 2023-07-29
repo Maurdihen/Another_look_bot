@@ -1,6 +1,5 @@
 import os
 import datetime as dt
-from pprint import pprint
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -8,16 +7,23 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+credentials_file_path = os.path.join(current_dir, 'credentials.json')
+token_file_path = os.path.join(current_dir, 'token.json')
+
 
 class Calendar:
     _creds = None
-    _calendar_id: str = "e8738f011308538b82943abd6ce80684786b0c85d7c3a563c0fb5e916c52d051@group.calendar.google.com"
+    # идентификатор календаря для индивидуальных занятий
+    _in_calendar_id: str = "27e12357628637d37bb635ae2aac09a2c5f2cd48803e2ff583c5c85c3576d93b@group.calendar.google.com"
+    # идентификатор календаря для групповых занятий
+    _gr_calendar_id: str = "f3670c96d1e99746be552a678e24853f57aeeff498e8556a8942bcbc8dde99b1@group.calendar.google.com"
 
     @staticmethod
     def _load_credentials() -> None:
         """Загрузка учетных данных из файла "token.json" (если он существует)"""
-        if os.path.exists("token.json"):
-            Calendar._creds = Credentials.from_authorized_user_file("token.json")
+        if os.path.exists(token_file_path):
+            Calendar._creds = Credentials.from_authorized_user_file(token_file_path)
 
     @staticmethod
     def _get_credentials() -> None:
@@ -26,14 +32,15 @@ class Calendar:
             if Calendar._creds and Calendar._creds.expired and Calendar._creds.refresh_token:
                 Calendar._creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file("credentials.json",
+                flow = InstalledAppFlow.from_client_secrets_file(credentials_file_path,
                                                                  ["https://www.googleapis.com/auth/calendar"])
                 Calendar._creds = flow.run_local_server(port=0)
-            with open("token.json", "w") as token:
+            with open(token_file_path, "w") as token:
                 token.write(Calendar._creds.to_json())
 
     @classmethod
-    def _output(cls, events):
+    def _output(cls, events: list[dict]) -> list[dict]:
+        """Преобразует список событий в удобный формат для вывода информации"""
         all_events = []
 
         if not events:
@@ -72,7 +79,7 @@ class Calendar:
             end_time = next_day.isoformat() + "+03:00"
 
             event_result = service.events().list(
-                calendarId=Calendar._calendar_id,
+                calendarId=Calendar._in_calendar_id,
                 timeMin=start_time,
                 timeMax=end_time,
                 singleEvents=True,
@@ -115,7 +122,7 @@ class Calendar:
             service = build("calendar", "v3", credentials=Calendar._creds)
             Calendar._delete_event(service=service, start=data['start'], end=data['end'])
             event = service.events().insert(
-                calendarId=Calendar._calendar_id,
+                calendarId=Calendar._in_calendar_id,
                 body=event_data
             ).execute()
 
@@ -131,7 +138,7 @@ class Calendar:
     @classmethod
     def _delete_event(cls, service, start: str, end: str) -> None:
         events = service.events().list(
-            calendarId=Calendar._calendar_id,
+            calendarId=Calendar._in_calendar_id,
             timeMin=start,
             timeMax=end,
             maxResults=10,
@@ -140,19 +147,18 @@ class Calendar:
 
         if 'items' in events:
             for event in events['items']:
-                service.events().delete(calendarId=Calendar._calendar_id, eventId=event['id']).execute()
+                service.events().delete(calendarId=Calendar._in_calendar_id, eventId=event['id']).execute()
                 print(f"Event with ID '{event['id']}' has been deleted.")
         else:
             print("No events found in the specified date and time range.")
 
-            
     @classmethod
     def delete_user_event(cls, eid: str):
         cls._load_credentials()
         cls._get_credentials()
         try:
             service = build("calendar", "v3", credentials=Calendar._creds)
-            service.events().delete(calendarId=Calendar._calendar_id, eventId=eid).execute()
+            service.events().delete(calendarId=Calendar._in_calendar_id, eventId=eid).execute()
         except HttpError as error:
             print("error", error)
 
@@ -166,4 +172,5 @@ data: dict = {
 }
 
 if __name__ == "__main__":
-    print(Calendar.create_calendar_event(data))
+    print(Calendar.check_calendar("2023-07-29T13:00:00+03:00"))
+    print(Calendar.create_calendar_event(data=data))
