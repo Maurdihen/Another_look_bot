@@ -1,12 +1,15 @@
 import os
 import datetime as dt
-from pprint import pprint
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+credentials_file_path = os.path.join(current_dir, 'credentials.json')
+token_file_path = os.path.join(current_dir, 'token.json')
 
 
 class Calendar:
@@ -16,8 +19,8 @@ class Calendar:
     @staticmethod
     def _load_credentials() -> None:
         """Загрузка учетных данных из файла "token.json" (если он существует)"""
-        if os.path.exists("token.json"):
-            Calendar._creds = Credentials.from_authorized_user_file("token.json")
+        if os.path.exists(token_file_path):
+            Calendar._creds = Credentials.from_authorized_user_file(token_file_path)
 
     @staticmethod
     def _get_credentials() -> None:
@@ -26,10 +29,10 @@ class Calendar:
             if Calendar._creds and Calendar._creds.expired and Calendar._creds.refresh_token:
                 Calendar._creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file("credentials.json",
+                flow = InstalledAppFlow.from_client_secrets_file(credentials_file_path,
                                                                  ["https://www.googleapis.com/auth/calendar"])
                 Calendar._creds = flow.run_local_server(port=0)
-            with open("token.json", "w") as token:
+            with open(token_file_path, "w") as token:
                 token.write(Calendar._creds.to_json())
 
     @classmethod
@@ -161,9 +164,9 @@ data: dict = {
     "summary": 'Индивидуальная встреча',
     "name": 'Денис',
     "phone_number": '89278685655',
-    "start": "2023-07-29T17:00:00+03:00",
-    "end": "2023-07-29T18:00:00+03:00",
+    "start": "2023-07-29T00:00:00+03:00",
+    "end": "2023-07-30T19:00:00+03:00",
 }
 
 if __name__ == "__main__":
-    print(Calendar.create_calendar_event(data))
+    print(Calendar.check_calendar("2023-07-28T18:00:00+03:00"))
