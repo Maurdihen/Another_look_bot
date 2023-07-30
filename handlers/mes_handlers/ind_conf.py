@@ -17,10 +17,16 @@ async def get_name_number(message: Message, state: FSMContext):
                            reply_markup=number
                            )
 
+    await UserStates.ReqestCont.set()
 
-@dp.message_handler(content_types=['contact'], state='*')
+
+@dp.message_handler(content_types=['contact'], state=UserStates.ReqestCont)
 async def my_number(message: Message, state: FSMContext):
-    from handlers.callbacks.general_info import event, cons
+
+    async with state.proxy() as data:
+        event = data["event"]
+        cons = data["cons"]
+
     async with state.proxy() as data:
         text = data.get("text")
     await bot.send_message(message.chat.id, text=(message.contact["phone_number"], text, event))

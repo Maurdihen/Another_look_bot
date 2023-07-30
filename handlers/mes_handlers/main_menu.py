@@ -8,7 +8,7 @@ from buttons.inlines import general_info_markup
 from db_work.setup_db import session
 from db_work.service.notes_service import NotesService
 from db_work.service.users_service import UsersService
-
+from states import UserStates
 
 users_service = UsersService(session)
 notes_service = NotesService(session)
@@ -28,6 +28,7 @@ async def general_inf(message: types.Message):
         reply_markup=general_info_markup
     )
 
+    await UserStates.ChooseCat.set()
 
 @dp.message_handler(lambda message: message.text == "Мои записи", state="*")
 async def my_notes(message: types.Message):

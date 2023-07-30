@@ -8,14 +8,11 @@ from calendar_api.main import Calendar
 from utils import convert_date
 from states import UserStates
 
-cons = None
-subgroup = None
-events = None
-event = None
+from aiogram.dispatcher import FSMContext
 
 
-@dp.callback_query_handler(cd.filter(action="ind_cons"))
-async def ind_cons_callback(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(cd.filter(action="ind_cons"), state=UserStates.ChooseCat)
+async def ind_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -29,12 +26,14 @@ async def ind_cons_callback(callback_query: types.CallbackQuery):
         reply_markup=enroll
     )
 
-    global cons
-    cons = cd.parse(callback_query.data)["action"]
+    async with state.proxy() as data:
+        data["cons"] = cd.parse(callback_query.data)["action"]
+
+    await UserStates.Enroll.set()
 
 
-@dp.callback_query_handler(cd.filter(action="enroll"))
-async def enroll_callback(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(cd.filter(action="enroll"), state=UserStates.Enroll)
+async def enroll_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -42,9 +41,11 @@ async def enroll_callback(callback_query: types.CallbackQuery):
         reply_markup=this_weeks_button_markup
     )
 
+    await UserStates.ChooseDay.set()
 
-@dp.callback_query_handler(cd.filter(action='mini_group'))
-async def mini_cons_callback(callback_query: types.CallbackQuery):
+
+@dp.callback_query_handler(cd.filter(action='mini_group'), state=UserStates.ChooseCat)
+async def mini_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -53,12 +54,15 @@ async def mini_cons_callback(callback_query: types.CallbackQuery):
         "Присоединиться к ближайшей группе по актуальной для тебя теме можно здесь 🔽🔽🔽",
         reply_markup=enroll
     )
-    global cons
-    cons = cd.parse(callback_query.data)["action"]
+
+    async with state.proxy() as data:
+        data["cons"] = cd.parse(callback_query.data)["action"]
+
+    await UserStates.Enroll.set()
 
 
-@dp.callback_query_handler(cd.filter(action='them_group'))
-async def them_cons_callback(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(cd.filter(action='them_group'), state=UserStates.ChooseCat)
+async def them_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -68,8 +72,11 @@ async def them_cons_callback(callback_query: types.CallbackQuery):
         "поддерживающий круг единомышленников 🙌",
         reply_markup=subgroup_them
     )
-    global cons
-    cons = cd.parse(callback_query.data)["action"]
+
+    async with state.proxy() as data:
+        data["cons"] = cd.parse(callback_query.data)["action"]
+
+    await UserStates.Enroll.set()
 
 
 @dp.callback_query_handler(cd.filter(action='about_relat'))
@@ -120,8 +127,8 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
     subgroup = cd.parse(callback_query.data)["action"]
 
 
-@dp.callback_query_handler(lambda c: c.data.startswith('date_'))
-async def date_callback_function(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(lambda c: c.data.startswith('date_'), state=UserStates.ChooseDay)
+async def date_callback_function(callback_query: types.CallbackQuery, state: FSMContext):
     if callback_query.data.split('_')[1] == "back":
         await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
         return
@@ -129,8 +136,10 @@ async def date_callback_function(callback_query: types.CallbackQuery):
     selected_date = callback_query.data.split('_')[1]
     date = convert_date(selected_date) + "+03:00"
 
-    global events
     events = Calendar.check_calendar(date)
+
+    async with state.proxy() as data:
+        data["events"] = events
 
     if len(events) == 0:
         await bot.send_message(callback_query.from_user.id, text="Сори в этот день нет свободных слотов")
@@ -139,17 +148,25 @@ async def date_callback_function(callback_query: types.CallbackQuery):
     await bot.send_message(callback_query.from_user.id, text="Вы можете записаться в такие слоты:")
     await bot.send_message(callback_query.from_user.id, text=events[0], reply_markup=next_)
 
+    await UserStates.ChooseTime.set()
 
-@dp.callback_query_handler(lambda c: c.data.startswith('next_'))
-async def next_callback(callback_query: types.CallbackQuery):
+
+@dp.callback_query_handler(lambda c: c.data.startswith('next_'), state=UserStates.ChooseTime)
+async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
     message_number = int(callback_query.data.split('_')[1])
+
+    async with state.proxy() as data:
+        events = data["events"]
 
     if callback_query.data.split('_')[2] == "signup":
         await bot.send_message(callback_query.from_user.id, text="Для того чтобы бот смог вас записать отправте "
                                                                  "пожалуйста своё имя и фамилию в формате Имя Фамилия")
-        global event
+
         event = events[int(callback_query.data.split('_')[1])]
-        print(event, int(callback_query.data.split('_')[1]))
+
+        async with state.proxy() as data:
+            data["event"] = event
+
         await UserStates.GetNumber.set()
         return
     elif callback_query.data.split('_')[2] == "back":
@@ -167,7 +184,7 @@ async def next_callback(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=events[next_message_number],
+            text=[next_message_number],
             reply_markup=next_,
             parse_mode=ParseMode.MARKDOWN,
         )
