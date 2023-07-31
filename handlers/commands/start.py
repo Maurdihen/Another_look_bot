@@ -2,14 +2,14 @@ from aiogram import types
 from sqlalchemy.exc import NoResultFound
 
 from bot_tg.loader import dp, bot
-from buttons.inlines import connect
 from buttons.reply import menu_main
 
 from db_work.setup_db import session
 from db_work.service.users_service import UsersService
 
-users_service = UsersService(session)
 from aiogram.dispatcher import FSMContext
+
+users_service = UsersService(session)
 
 
 @dp.message_handler(commands=['start'], state="*")
