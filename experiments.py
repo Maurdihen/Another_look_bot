@@ -1,40 +1,41 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from db_work.dao.models.model import Users, Notes  # Замените "your_module_name" на имя вашего модуля с объявлением таблиц
+from aiogram import Bot, Dispatcher, types
+from aiogram.contrib.middlewares.logging import LoggingMiddleware
+from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils import executor
 
-# Создаем соединение с базой данных
-engine = create_engine('sqlite:///notes.db_work')
+API_TOKEN = '5978072325:AAGJL5l2a04ceKw7rSRtwUK8E8DkGNNH1Ek'  # Замените на свой API-токен, полученный от BotFather
 
-# Создаем сессию
-Session = sessionmaker(bind=engine)
-session = Session()
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
+dp.middleware.setup(LoggingMiddleware())
 
-# Задайте значение user_id_tg, для которого хотите найти Notes
-target_user_id_tg = 1362055393  # Замените на нужный вам user_id_tg
 
-# Находим пользователя по user_id_tg
-user = session.query(Users).filter_by(user_id_tg=target_user_id_tg).first()
+@dp.message_handler(commands=['start'])
+async def send_welcome(message: types.Message):
+    keyboard = types.ReplyKeyboardMarkup()
+    contact_button = types.KeyboardButton(text="Поделиться контактом", request_contact=True)
+    keyboard.add(contact_button)
+    await message.reply("Привет! Нажми на кнопку, чтобы поделиться контактом.", reply_markup=keyboard)
 
-if user:
-    # Create a new note for the user with the correct date format
-    new_note = Notes(
-        user=user,
-        date="test",  # Convert to Python date object
-        time="12:30 PM",  # Replace this with the correct time
-        category="Some Category",
-        sub_category="Some Sub-category"
-    )
+@dp.callback_query_handler(lambda c: c.data == 'share_contact')
+async def process_callback_share_contact(callback_query: types.CallbackQuery):
+    keyboard = types.ReplyKeyboardRemove()  # Скрыть клавиатуру после нажатия кнопки
 
-    # Add the new note to the session and commit the changes
-    session.add(new_note)
-    session.commit()
+    # Получим контактные данные пользователя из объекта callback_query
+    user_id = callback_query.from_user.id
+    first_name = callback_query.from_user.first_name
+    last_name = callback_query.from_user.last_name
 
-    # Now you can fetch all notes for the user again
-    user_notes = user.notes
-    for note in user_notes:
-        print(f"Note ID: {note.id}, Date: {note.date}, Time: {note.time}, Category: {note.category}, Sub-category: {note.sub_category}")
-else:
-    print("Пользователь не найден")
+    # Проверяем, есть ли у пользователя контактные данные
+    if callback_query.from_user.contact is not None:
+        contact = callback_query.from_user.contact
+        phone_number = contact.phone_number
+        # Отправляем контактные данные обратно пользователю
+        await bot.send_contact(user_id, phone_number=phone_number, first_name=first_name, last_name=last_name,
+                               reply_markup=keyboard)
+    else:
+        await bot.send_message(user_id, "У вас нет сохраненного контакта. Пожалуйста, предоставьте его в настройках "
+                                        "Telegram и повторите попытку.", reply_markup=keyboard)
 
-# Close the session
-session.close()
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)

@@ -1,14 +1,18 @@
 from aiogram import types
+from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot_tg.loader import dp, bot
-from buttons.inlines import week_button_markup, this_weeks_button_markup, cd, subgroup_them, enroll
+from buttons.inlines import this_weeks_button_markup, cd, subgroup_them, enroll, next_
+from buttons.reply import number
+from calendar_api.main import Calendar
+from utils import convert_date
+from states import UserStates
 
-cons = None
-subgroup = None
+from aiogram.dispatcher import FSMContext
 
 
-@dp.callback_query_handler(cd.filter(action="ind_cons"))
-async def ind_cons_callback(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(cd.filter(action="ind_cons"), state=UserStates.ChooseCat)
+async def ind_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -22,12 +26,14 @@ async def ind_cons_callback(callback_query: types.CallbackQuery):
         reply_markup=enroll
     )
 
-    global cons
-    cons = cd.parse(callback_query.data)["action"]
+    async with state.proxy() as data:
+        data["cons"] = cd.parse(callback_query.data)["action"]
+
+    await UserStates.Enroll.set()
 
 
-@dp.callback_query_handler(cd.filter(action="enroll"))
-async def enroll_callback(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(cd.filter(action="enroll"), state=UserStates.Enroll)
+async def enroll_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -35,9 +41,11 @@ async def enroll_callback(callback_query: types.CallbackQuery):
         reply_markup=this_weeks_button_markup
     )
 
+    await UserStates.ChooseDay.set()
 
-@dp.callback_query_handler(cd.filter(action='mini_group'))
-async def mini_cons_callback(callback_query: types.CallbackQuery):
+
+@dp.callback_query_handler(cd.filter(action='mini_group'), state=UserStates.ChooseCat)
+async def mini_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -46,12 +54,15 @@ async def mini_cons_callback(callback_query: types.CallbackQuery):
         "Присоединиться к ближайшей группе по актуальной для тебя теме можно здесь 🔽🔽🔽",
         reply_markup=enroll
     )
-    global cons
-    cons = cd.parse(callback_query.data)["action"]
+
+    async with state.proxy() as data:
+        data["cons"] = cd.parse(callback_query.data)["action"]
+
+    await UserStates.Enroll.set()
 
 
-@dp.callback_query_handler(cd.filter(action='them_group'))
-async def them_cons_callback(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(cd.filter(action='them_group'), state=UserStates.ChooseCat)
+async def them_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -61,8 +72,11 @@ async def them_cons_callback(callback_query: types.CallbackQuery):
         "поддерживающий круг единомышленников 🙌",
         reply_markup=subgroup_them
     )
-    global cons
-    cons = cd.parse(callback_query.data)["action"]
+
+    async with state.proxy() as data:
+        data["cons"] = cd.parse(callback_query.data)["action"]
+
+    await UserStates.Enroll.set()
 
 
 @dp.callback_query_handler(cd.filter(action='about_relat'))
@@ -113,38 +127,66 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
     subgroup = cd.parse(callback_query.data)["action"]
 
 
-# @dp.callback_query_handler(cd.filter(action='this_week'))
-# async def this_week_callback(callback_query: types.CallbackQuery):
-#     await bot.answer_callback_query(callback_query.id)
-#     await bot.send_message(
-#         callback_query.from_user.id,
-#         'Выберите в какой день хотите провести встречу',
-#         reply_markup=this_weeks_button_markup
-#     )
-
-
-# @dp.callback_query_handler(cd.filter(action='next_week'))
-# async def next_week_callback(callback_query: types.CallbackQuery):
-#     await bot.answer_callback_query(callback_query.id)
-#     await bot.send_message(
-#         callback_query.from_user.id,
-#         'Выберите в какой день хотите провести встречу',
-#         reply_markup=next_weeks_button_markup
-#     )
-
-
-@dp.callback_query_handler(lambda c: c.data.startswith('date_'))
-async def date_callback_function(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(lambda c: c.data.startswith('date_'), state=UserStates.ChooseDay)
+async def date_callback_function(callback_query: types.CallbackQuery, state: FSMContext):
     if callback_query.data.split('_')[1] == "back":
         await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
         return
+
     selected_date = callback_query.data.split('_')[1]
-    if cons == "ind_cons":
-        conf = "индивидуальной"
-    elif cons == "mini_group":
-        conf = "мини групп"
+    date = convert_date(selected_date) + "+03:00"
+
+    events = Calendar.check_calendar(date)
+
+    async with state.proxy() as data:
+        data["events"] = events
+
+    if len(events) == 0:
+        await bot.send_message(callback_query.from_user.id, text="Сори в этот день нет свободных слотов")
+        return
+
+    await bot.send_message(callback_query.from_user.id, text="Вы можете записаться в такие слоты:")
+    await bot.send_message(callback_query.from_user.id, text=events[0], reply_markup=next_)
+
+    await UserStates.ChooseTime.set()
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith('next_'), state=UserStates.ChooseTime)
+async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
+    message_number = int(callback_query.data.split('_')[1])
+
+    async with state.proxy() as data:
+        events = data["events"]
+
+    if callback_query.data.split('_')[2] == "signup":
+        await bot.send_message(callback_query.from_user.id, text="Для того чтобы бот смог вас записать отправте "
+                                                                 "пожалуйста своё имя и фамилию в формате Имя Фамилия")
+
+        event = events[int(callback_query.data.split('_')[1])]
+
+        async with state.proxy() as data:
+            data["event"] = event
+
+        await UserStates.GetNumber.set()
+        return
+    elif callback_query.data.split('_')[2] == "back":
+        next_message_number = message_number - 1
     else:
-        conf = "Тематической"
-    if subgroup:
-        print(subgroup)
-    await bot.answer_callback_query(callback_query.id, text=f"Вы выбрали день {selected_date} для {conf} встречи!")
+        next_message_number = message_number + 1
+
+    if len(events) > next_message_number >= 0:
+        next_ = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton("Далее", callback_data=f'next_{next_message_number}_next')],
+            [InlineKeyboardButton("Записаться", callback_data=f'next_{next_message_number}_signup')],
+            [InlineKeyboardButton("Назад", callback_data=f'next_{next_message_number}_back')],
+        ])
+
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            text=[next_message_number],
+            reply_markup=next_,
+            parse_mode=ParseMode.MARKDOWN,
+        )
+    else:
+        await bot.answer_callback_query(callback_query.id, "Это последнее запись.")

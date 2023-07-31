@@ -8,7 +8,7 @@ from buttons.inlines import general_info_markup
 from db_work.setup_db import session
 from db_work.service.notes_service import NotesService
 from db_work.service.users_service import UsersService
-
+from states import UserStates
 
 users_service = UsersService(session)
 notes_service = NotesService(session)
@@ -23,12 +23,12 @@ async def general_inf(message: types.Message):
 
     await bot.send_message(
         chat_id=message.chat.id,
-        text="В центре есть индивидуальные консультации по твоему запросу или курсы для тех, кому интересны темы личностного развития , взаимодействие в группе в безопасной среде.\n "
-             "Выбирай тот вариант, который тебе интересен🔽🔽🔽",
+        text="Ты хочешь индивидуальную консультацию или тематический курс /мастер-класс? Выбирай 🔽🔽🔽",
         parse_mode='html',
         reply_markup=general_info_markup
     )
 
+    await UserStates.ChooseCat.set()
 
 @dp.message_handler(lambda message: message.text == "Мои записи", state="*")
 async def my_notes(message: types.Message):
@@ -60,8 +60,3 @@ async def my_notes(message: types.Message):
         text=list_user_notes,
         parse_mode='html'
     )
-
-
-@dp.message_handler(content_types=['contact'])
-async def my_number(message: types.Message):
-    print(message.contact)
