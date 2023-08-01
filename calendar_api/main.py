@@ -235,4 +235,4 @@ class Calendar:
 
 
 if __name__ == "__main__":
-    print(Calendar.check_calendar(start_time="2023-08-01T00:00:00+03:00", summary='Самореализация'))
+    print(Calendar.check_calendar(start_time="2023-08-01T00:00:00+03:00", summary='Индивидуальная консультация'))
