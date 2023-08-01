@@ -4,7 +4,7 @@ from sqlalchemy.exc import NoResultFound
 from bot_tg.loader import dp, bot
 from buttons.reply import menu_main
 
-from db_work.setup_db import session
+from setup_db.sqlite_db import session
 from db_work.service.users_service import UsersService
 
 from aiogram.dispatcher import FSMContext
