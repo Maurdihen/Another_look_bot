@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 
 from db_work.dao.models.model import Base
 
-engine = create_engine('')
+engine = create_engine('postgresql://user:password@pg/db')
 
 Base.metadata.create_all(engine)
 
