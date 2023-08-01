@@ -81,7 +81,7 @@ class Calendar:
             if transparency is None:
                 continue
 
-            if filter_word is not None and filter_word in event['summary']:
+            if filter_word is not None and filter_word in event['summary'].lower():
                 events_dict = {}
                 start = event["start"].get("dateTime")
                 end = event["end"].get("dateTime")
@@ -235,4 +235,4 @@ class Calendar:
 
 
 if __name__ == "__main__":
-    print(Calendar.check_calendar(start_time="2023-07-31T00:00:00+03:00", summary='Индивидуальное занятие'))
+    print(Calendar.check_calendar(start_time="2023-08-01T00:00:00+03:00", summary='Индивидуальная консультация'))
