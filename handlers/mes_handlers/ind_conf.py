@@ -1,7 +1,9 @@
+from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
 from bot_tg.loader import dp, bot
+from buttons.inlines import connect
 from buttons.reply import number
 from states import UserStates
 from calendar_api.individual_calendar import Calendar
@@ -56,5 +58,15 @@ async def my_number(message: Message, state: FSMContext):
     }
     event_id = Calendar.create_event(event_data)
     event_data["event_id"] = event_id
-    await bot.send_message(message.chat.id, text=(message.contact["phone_number"], text, event, event_data))
+    text = f"""
+Вы записались на этот слот:
+
+<b>Название:</b> {event_data['summary']} 😊
+<b>Дата:</b> {event['date']['day']}.{event['date']['month']}.{event['date']['year']} 📅
+<b>Время начала встречи:</b> {event['startTime'][:-3]} ⏰
+<b>Конец встречи:</b> {event['endTime'][:-3]} 🕒
+<b>Ваше имя:</b> {text}
+<b>Ваш номер телефона:</b> {message.contact["phone_number"]}
+    """
+    await bot.send_message(message.chat.id, text=text, parse_mode=types.ParseMode.HTML, reply_markup=connect)
     await state.finish()
