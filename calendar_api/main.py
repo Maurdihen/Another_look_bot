@@ -30,8 +30,12 @@ class Calendar:
             if Calendar._creds and Calendar._creds.expired and Calendar._creds.refresh_token:
                 Calendar._creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(credentials_file_path,
-                                                                 ["https://www.googleapis.com/auth/calendar"])
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    credentials_file_path,
+                    ["https://www.googleapis.com/auth/calendar"],
+                    access_type='offline',
+                    prompt='consent',
+                )
                 Calendar._creds = flow.run_local_server(port=0)
             with open(token_file_path, "w") as token:
                 token.write(Calendar._creds.to_json())
@@ -235,4 +239,4 @@ class Calendar:
 
 
 if __name__ == "__main__":
-    print(Calendar.check_calendar(start_time="2023-08-01T00:00:00+03:00", summary='Самореализация'))
+    print(Calendar.check_calendar(start_time="2023-08-01T00:00:00+03:00", summary='Индивидуальная консультация'))

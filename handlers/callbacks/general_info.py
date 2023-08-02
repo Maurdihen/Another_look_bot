@@ -3,7 +3,6 @@ from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot_tg.loader import dp, bot
 from buttons.inlines import this_weeks_button_markup, cd, subgroup_them, enroll, next_
-from buttons.reply import number
 from calendar_api.main import Calendar
 from utils import convert_date
 from states import UserStates
@@ -76,11 +75,11 @@ async def them_cons_callback(callback_query: types.CallbackQuery, state: FSMCont
     async with state.proxy() as data:
         data["cons"] = cd.parse(callback_query.data)["action"]
 
-    await UserStates.Enroll.set()
+    await UserStates.Subgroup.set()
 
 
-@dp.callback_query_handler(cd.filter(action='about_relat'))
-async def subgroup_relat_them_callback(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(cd.filter(action='about_relat'), state=UserStates.Subgroup)
+async def subgroup_relat_them_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -94,12 +93,14 @@ async def subgroup_relat_them_callback(callback_query: types.CallbackQuery):
         'Мужской и женский взгляд 👀 комфортная скорость для привнесения теории в жизнь. Online',
         reply_markup=enroll
     )
-    global subgroup
-    subgroup = cd.parse(callback_query.data)["action"]
+    async with state.proxy() as data:
+        data["subgroup"] = cd.parse(callback_query.data)["action"]
+
+    await UserStates.Enroll.set()
 
 
-@dp.callback_query_handler(cd.filter(action='self_realization'))
-async def subgroup_realization_them_callback(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(cd.filter(action='self_realization'), state=UserStates.Subgroup)
+async def subgroup_realization_them_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -109,12 +110,14 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
         'скоростей. Встречи каждые 3 недели. Online',
         reply_markup=enroll
     )
-    global subgroup
-    subgroup = cd.parse(callback_query.data)["action"]
+    async with state.proxy() as data:
+        data["subgroup"] = cd.parse(callback_query.data)["action"]
+
+    await UserStates.Enroll.set()
 
 
-@dp.callback_query_handler(cd.filter(action='finance'))
-async def subgroup_realization_them_callback(callback_query: types.CallbackQuery):
+@dp.callback_query_handler(cd.filter(action='finance'), state=UserStates.Subgroup)
+async def subgroup_realization_them_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
         callback_query.from_user.id,
@@ -123,21 +126,42 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
         'с собственной траекторией ближайшего развития. 6 встреч = 6 месяцев. Online.',
         reply_markup=enroll
     )
-    global subgroup
-    subgroup = cd.parse(callback_query.data)["action"]
+
+    async with state.proxy() as data:
+        data["subgroup"] = cd.parse(callback_query.data)["action"]
+
+    await UserStates.Enroll.set()
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('date_'), state=UserStates.ChooseDay)
 async def date_callback_function(callback_query: types.CallbackQuery, state: FSMContext):
-    if callback_query.data.split('_')[1] == "back":
-        await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
-        return
-
     selected_date = callback_query.data.split('_')[1]
     date = convert_date(selected_date) + "+03:00"
 
-    events = Calendar.check_calendar(date)
+    async with state.proxy() as data:
+        cons = data["cons"]
+        try:
+            subgroup = data["subgroup"]
+        except:
+            pass
 
+
+    if cons == "ind_cons":
+        cons = "Индивидуальная консультация"
+    elif cons == "mini_group":
+        cons = "Мини-группа"
+    elif cons == "them_group":
+        if subgroup == "about_relat":
+            subgroup = "Про отношения"
+        elif subgroup == "self_realization":
+            subgroup = "Самореализация"
+        elif subgroup == "finance":
+            subgroup = "Финансы"
+        cons = f"Тематические группы {subgroup}"
+
+    print(cons, date)
+    events = Calendar.check_calendar(date, cons)
+    print(events)
     async with state.proxy() as data:
         data["events"] = events
 
@@ -163,6 +187,7 @@ async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
                                                                  "пожалуйста своё имя и фамилию в формате Имя Фамилия")
 
         event = events[int(callback_query.data.split('_')[1])]
+        print(events[int(callback_query.data.split('_')[1])])
 
         async with state.proxy() as data:
             data["event"] = event
@@ -190,3 +215,22 @@ async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
         )
     else:
         await bot.answer_callback_query(callback_query.id, "Это последнее запись.")
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith('back'), state="*")
+async def back_callback(callback_query: types.CallbackQuery, state: FSMContext):
+    await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
+    async with state.proxy() as data:
+        cons = data["cons"]
+    if cons == "them_group":
+        if await state.get_state() == "UserStates:Subgroup":
+            await UserStates.ChooseCat.set()
+        elif await state.get_state() == "UserStates:Enroll":
+            await UserStates.Subgroup.set()
+        elif await state.get_state() == "UserStates:ChooseDay":
+            await UserStates.Enroll.set()
+    else:
+        if await state.get_state() == "UserStates:ChooseDay":
+            await UserStates.Enroll.set()
+        else:
+            await UserStates.previous()

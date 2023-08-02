@@ -38,7 +38,7 @@ while cnt <= 7:
                                                            callback_data=f"date_{date.strftime('%d.%m.%Y')}"))
     cnt += 1
 
-back_button = InlineKeyboardButton("⬅️ Назад", callback_data="date_back")
+back_button = InlineKeyboardButton('⬅️ Назад', callback_data="back")
 this_weeks_button_list.append(back_button)
 
 this_weeks_button_markup = InlineKeyboardMarkup(row_width=1).add(*this_weeks_button_list)
@@ -48,14 +48,14 @@ subgroup_them = InlineKeyboardMarkup(row_width=1, inline_keyboard=[
     [InlineKeyboardButton('Про отношения', callback_data=cd.new("about_relat"))],
     [InlineKeyboardButton('Самореализация', callback_data=cd.new("self_realization"))],
     [InlineKeyboardButton('Про финансы', callback_data=cd.new("finance"))],
-    [InlineKeyboardButton('⬅️ Назад', callback_data="date_back")]
+    [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
 ])
 
 
 
 enroll = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('Записаться', callback_data=cd.new("enroll"))],
-    [InlineKeyboardButton('⬅️ Назад', callback_data="date_back")]
+    [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
 ])
 
 
