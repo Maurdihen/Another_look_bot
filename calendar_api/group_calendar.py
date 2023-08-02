@@ -1,4 +1,5 @@
 import os
+from pprint import pprint
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -7,7 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from contextlib import contextmanager
 
-from calendar_api.helper import Helper
+from calendar_api.helper import Helper, Id
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 credentials_file_path = os.path.join(current_dir, 'credentials.json')
@@ -117,11 +118,22 @@ class GroupCalendar:
             }
             events_dict["startTime"] = start[11:19]
             events_dict["endTime"] = end[11:19]
-            events_dict["transparency"] = transparency
 
             all_events.append(events_dict)
 
         return all_events
+
+    @classmethod
+    def _find_transparency(cls, events: dict) -> list[dict]:
+        result = []
+
+        for event in events:
+            if len(result) == 3:
+                break
+            if event.get('transparency') == 'transparent':
+                result.append(event)
+
+        return result
 
     @classmethod
     def check_calendar(cls, start_time: str) -> list or None:
@@ -135,7 +147,7 @@ class GroupCalendar:
         """
         with GroupCalendar._get_service() as service:
             try:
-                time = Helper.find_time(start_time)
+                time = Helper.find_time_for_group(start_time)
 
                 event_result = service.events().list(
                     calendarId=GroupCalendar._calendar_id,
@@ -145,8 +157,8 @@ class GroupCalendar:
                     orderBy="startTime",
                 ).execute()
 
-                events = event_result.get("items", [])
-
+                events = event_result.get('items', [])
+                events = GroupCalendar._find_transparency(events=events)
                 return GroupCalendar._output(events=events)
 
             except HttpError as error:
@@ -170,10 +182,12 @@ class GroupCalendar:
                     event = service.events().get(calendarId=GroupCalendar._calendar_id, eventId=event_id).execute()
 
                     current_description = event.get('description', '')
-                    new_description = current_description + f"{new_event_data['name']}: {new_event_data['phone_number']}\n"
+                    new_description = current_description + f"{new_event_data['name']}: " \
+                                                            f"{new_event_data['phone_number']}\n"
                     event['description'] = new_description
 
                     visitors_amount = len(event['description'].splitlines())
+
                     if visitors_amount >= 5:
                         event.pop("transparency")
 
@@ -187,6 +201,7 @@ class GroupCalendar:
 
                 except HttpError as error:
                     print("An error occurred:", error)
+                return Id(**{'event_id': event_id, 'calendar_id': GroupCalendar._calendar_id})
             else:
                 print("Event ID not found, nothing has been updated.")
 
@@ -212,5 +227,5 @@ if __name__ == "__main__":
         "phone_number": "0190909090",
     }
 
-    print(GroupCalendar.check_calendar(start_time="2023-08-02T00:00:00+03:00"))
-    GroupCalendar.edit_event(start="2023-08-03T20:00:00+03:00", end="2023-08-03T21:00:00+03:00", new_event_data=data)
+    pprint(GroupCalendar.check_calendar(start_time="2023-08-03T17:59:00+03:00"))
+    GroupCalendar.edit_event(start="2023-08-03T19:00:00+03:00", end="2023-08-03T20:00:00+03:00", new_event_data=data)

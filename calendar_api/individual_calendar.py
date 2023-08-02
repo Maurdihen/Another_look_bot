@@ -1,4 +1,5 @@
 import os
+from pprint import pprint
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -7,7 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from contextlib import contextmanager
 
-from calendar_api.helper import Helper
+from calendar_api.helper import Helper, Id
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 credentials_file_path = os.path.join(current_dir, 'credentials.json')
@@ -114,7 +115,6 @@ class Calendar:
             }
             events_dict["startTime"] = start[11:19]
             events_dict["endTime"] = end[11:19]
-            events_dict["transparency"] = transparency
 
             all_events.append(events_dict)
 
@@ -132,7 +132,7 @@ class Calendar:
         """
         with Calendar._get_service() as service:
             try:
-                time = Helper.find_time(start_time)
+                time = Helper.find_time_for_individual(start_time)
 
                 event_result = service.events().list(
                     calendarId=Calendar._calendar_id,
@@ -175,11 +175,13 @@ class Calendar:
                         eventId=event_id,
                         body=event,
                     ).execute()
-
+                    print(updated_event)
                     print("Event updated:", updated_event.get('htmlLink'))
 
                 except HttpError as error:
                     print("An error occurred:", error)
+
+                return Id(**{'event_id': event_id, 'calendar_id': Calendar._calendar_id})
             else:
                 print("Event ID not found, nothing has been updated.")
 
@@ -205,5 +207,5 @@ if __name__ == "__main__":
         "phone_number": "89278685655",
     }
 
-    print(Calendar.check_calendar(start_time="2023-08-02T16:00:00+03:00"))
-    Calendar.edit_event(start="2023-08-02T21:30:00+03:00", end="2023-08-02T22:30:00+03:00", new_event_data=data)
+    pprint(Calendar.check_calendar(start_time="2023-08-03T12:00:00+03:00"))
+    info = Calendar.edit_event(start="2023-08-03T19:00:00+03:00", end="2023-08-03T20:00:00+03:00", new_event_data=data)

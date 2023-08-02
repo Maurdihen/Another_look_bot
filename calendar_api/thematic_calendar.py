@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from contextlib import contextmanager
 
-from calendar_api.helper import Helper
+from calendar_api.helper import Helper, Id
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 credentials_file_path = os.path.join(current_dir, 'credentials.json')
@@ -142,7 +142,7 @@ class ThematicCalendar:
         """
         with ThematicCalendar._get_service() as service:
             try:
-                time = Helper.find_time(start_time)
+                time = Helper.find_time_for_group(start_time)
 
                 event_result = service.events().list(
                     calendarId=ThematicCalendar._calendar_id,
@@ -190,6 +190,7 @@ class ThematicCalendar:
 
                 except HttpError as error:
                     print("An error occurred:", error)
+                return Id(**{'event_id': event_id, 'calendar_id': ThematicCalendar._calendar_id})
             else:
                 print("Event ID not found, nothing has been updated.")
 
