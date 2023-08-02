@@ -3,7 +3,7 @@ from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot_tg.loader import dp, bot
 from buttons.inlines import this_weeks_button_markup, cd, subgroup_them, enroll, next_
-from calendar_api.main import Calendar
+from calendar_api.individual_calendar import Calendar
 from utils import convert_date
 from states import UserStates
 

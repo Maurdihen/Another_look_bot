@@ -4,7 +4,7 @@ from aiogram.types import Message
 from bot_tg.loader import dp, bot
 from buttons.reply import number
 from states import UserStates
-from calendar_api.main import Calendar
+from calendar_api.individual_calendar import Calendar
 
 
 @dp.message_handler(state=UserStates.GetNumber)
@@ -54,7 +54,7 @@ async def my_number(message: Message, state: FSMContext):
         "start": f"{event['date']['year']}-{event['date']['month']}-{event['date']['day']}T{event['startTime']}+03:00",
         "end": f"{event['date']['year']}-{event['date']['month']}-{event['date']['day']}T{event['endTime']}+03:00",
     }
-    event_id = Calendar.create_calendar_event(event_data)
+    event_id = Calendar.create_event(event_data)
     event_data["event_id"] = event_id
     await bot.send_message(message.chat.id, text=(message.contact["phone_number"], text, event, event_data))
     await state.finish()
