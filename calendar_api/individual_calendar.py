@@ -1,11 +1,11 @@
 import os
-import datetime as dt
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from contextlib import contextmanager
 
 from calendar_api.helper import Helper
 
@@ -40,44 +40,44 @@ class Calendar:
             with open(token_file_path, "w") as token:
                 token.write(Calendar._creds.to_json())
 
+    @staticmethod
+    @contextmanager
+    def _get_service():
+        """Контекстный менеджер для получения сервиса Google Calendar API."""
+        Calendar._load_credentials()
+        Calendar._get_credentials()
+        service = build("calendar", "v3", credentials=Calendar._creds)
+        yield service
+
     @classmethod
-    def _delete_event(cls, service, start: str, end: str, calendar_id: str):
+    def _get_event_id(cls, start_time: str, end_time: str):
         """
-        Удаляет события из Google Calendar в указанном диапазоне даты и времени.
+        Возвращает ID первого события, найденного в указанном интервале времени.
         Args:
-            service: Сервис Google Calendar API, полученный с помощью учетных данных.
-            start (str): Начальная дата и время в формате ISO 8601 (например, "2023-07-31T00:00:00+03:00").
-            end (str): Конечная дата и время в формате ISO 8601 (например, "2023-07-31T23:59:59+03:00").
-            calendar_id (str): Идентификатор календаря, из которого нужно удалить события.
+            start_time (str): Время начала интервала для поиска событий в формате ISO 8601.
+            end_time (str): Время окончания интервала для поиска событий в формате ISO 8601.
         Returns:
-            None: Функция не возвращает значения.
+            str: ID первого найденного события или пустая строка, если события не найдены.
         """
-        events = service.events().list(
-            calendarId=calendar_id,
-            timeMin=start,
-            timeMax=end,
-            maxResults=10,
-            singleEvents=True
-        ).execute()
+        with Calendar._get_service() as service:
+            try:
+                events_result = service.events().list(
+                    calendarId=Calendar._calendar_id,
+                    timeMin=start_time,
+                    timeMax=end_time,
+                    singleEvents=True,
+                    orderBy="startTime",
+                ).execute()
+                events = events_result.get('items', [])
 
-        for event in events.get('items', []):
-            service.events().delete(calendarId=calendar_id, eventId=event['id']).execute()
-            print(f"Event with ID '{event['id']}' has been deleted.")
+                if events:
+                    return events[0]["id"]
+                else:
+                    return ""
 
-        if not events.get('items'):
-            print("No events found in the specified date and time range.")
-
-    @classmethod
-    def _find_event(cls, service, start: str, end: str, calendar_id: str):
-        events = service.events().list(
-            calendarId=calendar_id,
-            timeMin=start,
-            timeMax=end,
-            maxResults=1,
-            singleEvents=True
-        ).execute()
-
-        return events.get('items')['id']
+            except (HttpError, IndexError) as error:
+                print("An error occurred:", error)
+                return ""
 
     @classmethod
     def _output(cls, events: list[dict]) -> list[dict]:
@@ -130,71 +130,58 @@ class Calendar:
         Returns:
             list or None: Словарь с информацией о ближайших событиях или None, если произошла ошибка.
         """
-        cls._load_credentials()
-        cls._get_credentials()
+        with Calendar._get_service() as service:
+            try:
+                time = Helper.find_time(start_time)
 
-        try:
-            service = build("calendar", "v3", credentials=Calendar._creds)
+                event_result = service.events().list(
+                    calendarId=Calendar._calendar_id,
+                    timeMin=time.start_time,
+                    timeMax=time.end_time,
+                    singleEvents=True,
+                    orderBy="startTime",
+                ).execute()
 
-            time = Helper.find_time(start_time)
+                events = event_result.get("items", [])
 
-            event_result = service.events().list(
-                calendarId=Calendar._calendar_id,
-                timeMin=time.start_time,
-                timeMax=time.end_time,
-                singleEvents=True,
-                orderBy="startTime",
-            ).execute()
+                return Calendar._output(events=events)
 
-            events = event_result.get("items", [])
-
-            return Calendar._output(events=events)
-
-        except HttpError as error:
-            print("An error occurred:", error)
-            return
+            except HttpError as error:
+                print("An error occurred:", error)
+                return
 
     @classmethod
-    def create_calendar_event(cls, data: dict) -> True or None:
+    def edit_event(cls, start: str, end: str, new_event_data: dict):
         """
-        Создает новое событие в Google Calendar с помощью данных event_data
+        Редактирует событие, найденное в указанном интервале времени, добавляя новую информацию в описание.
         Args:
-            data (dict): Словарь, включающий ключи "summary", "name", "phone_number", "start", "end",
-                         для создания события.
-        Returns:
-            str or None: Идентификатор созданного события или None, если произошла ошибка.
+            start (str): Время начала интервала для поиска события в формате ISO 8601.
+            end (str): Время окончания интервала для поиска события в формате ISO 8601.
+            new_event_data (dict): Словарь с новыми данными для добавления в описание события.
         """
-        cls._load_credentials()
-        cls._get_credentials()
+        with Calendar._get_service() as service:
+            event_id = cls._get_event_id(start_time=start, end_time=end)
 
-        event_data = {
-            "summary": f"{data['summary']}",
-            "location": "Чебоксары",
-            "description": f"{data['name']} - {data['phone_number']}",
-            "start": {
-                "dateTime": f"{data['start']}",
-                "timeZone": "Europe/Moscow"
-            },
-            "end": {
-                "dateTime": f"{data['end']}",
-                "timeZone": "Europe/Moscow"
-            },
-            "recurrence": ["RRULE:FREQ=DAILY;COUNT=1"],
-        }
+            if event_id:
+                try:
+                    event = service.events().get(calendarId=Calendar._calendar_id, eventId=event_id).execute()
 
-        try:
-            service = build("calendar", "v3", credentials=Calendar._creds)
-            Calendar._delete_event(service=service, start=data['start'], end=data['end'],
-                                   calendar_id=Calendar._calendar_id)
-            event = service.events().insert(calendarId=Calendar._calendar_id, body=event_data).execute()
+                    new_description = f"{new_event_data['name']}: {new_event_data['phone_number']}"
+                    event['description'] = new_description
+                    event.pop("transparency")
 
-            print(f"Event created: {event.get('htmlLink')}")
+                    updated_event = service.events().update(
+                        calendarId=Calendar._calendar_id,
+                        eventId=event_id,
+                        body=event,
+                    ).execute()
 
-            return event['id']
+                    print("Event updated:", updated_event.get('htmlLink'))
 
-        except HttpError as error:
-            print("An error occurred:", error)
-            return
+                except HttpError as error:
+                    print("An error occurred:", error)
+            else:
+                print("Event ID not found, nothing has been updated.")
 
     @classmethod
     def delete_user_event(cls, eid: str):
@@ -205,20 +192,18 @@ class Calendar:
         Returns:
             None: Функция не возвращает значения.
         """
-        cls._load_credentials()
-        cls._get_credentials()
-
-        try:
-            service = build("calendar", "v3", credentials=Calendar._creds)
-            service.events().delete(calendarId=Calendar._calendar_id, eventId=eid).execute()
-        except HttpError as error:
-            print("error", error)
+        with Calendar._get_service() as service:
+            try:
+                service.events().delete(calendarId=Calendar._calendar_id, eventId=eid).execute()
+            except HttpError as error:
+                print("An error occurred:", error)
 
 
 if __name__ == "__main__":
-    data = {"summary": 'Индивидуальная консультация',
-            "name": "roma",
-            "phone_number": "+79674727177",
-            "start": "2023-08-02T18:00:00+03:00",
-            "end": "2023-08-02T19:00:00+03:00"}
+    data = {
+        "name": "Денис",
+        "phone_number": "89278685655",
+    }
+
     print(Calendar.check_calendar(start_time="2023-08-02T16:00:00+03:00"))
+    Calendar.edit_event(start="2023-08-02T21:30:00+03:00", end="2023-08-02T22:30:00+03:00", new_event_data=data)
