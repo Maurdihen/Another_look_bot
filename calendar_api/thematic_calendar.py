@@ -14,39 +14,39 @@ credentials_file_path = os.path.join(current_dir, 'credentials.json')
 token_file_path = os.path.join(current_dir, 'token.json')
 
 
-class GroupCalendar:
+class ThematicCalendar:
     _scopes = ["https://www.googleapis.com/auth/calendar"]
     _creds = None
-    _calendar_id: str = "f3670c96d1e99746be552a678e24853f57aeeff498e8556a8942bcbc8dde99b1@group.calendar.google.com"
+    _calendar_id: str = "961b78b7c2b24064deafd4e8257384fe4afd65cbc8d9ebbc756f3d624d6f175b@group.calendar.google.com"
 
     @staticmethod
     def _load_credentials():
         """Загрузка учетных данных из файла "token.json" (если он существует)"""
         if os.path.exists(token_file_path):
-            GroupCalendar._creds = Credentials.from_authorized_user_file(token_file_path, GroupCalendar._scopes)
+            ThematicCalendar._creds = Credentials.from_authorized_user_file(token_file_path, ThematicCalendar._scopes)
 
     @staticmethod
     def _get_credentials():
         """Получение действительных учетных данных или обновление их, если они просрочены"""
-        if not GroupCalendar._creds or not GroupCalendar._creds.valid:
-            if GroupCalendar._creds and GroupCalendar._creds.expired and GroupCalendar._creds.refresh_token:
-                GroupCalendar._creds.refresh(Request())
+        if not ThematicCalendar._creds or not ThematicCalendar._creds.valid:
+            if ThematicCalendar._creds and ThematicCalendar._creds.expired and ThematicCalendar._creds.refresh_token:
+                ThematicCalendar._creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
                     credentials_file_path,
                     ["https://www.googleapis.com/auth/calendar"],
                 )
-                GroupCalendar._creds = flow.run_local_server(port=0)
+                ThematicCalendar._creds = flow.run_local_server(port=0)
             with open(token_file_path, "w") as token:
-                token.write(GroupCalendar._creds.to_json())
+                token.write(ThematicCalendar._creds.to_json())
 
     @staticmethod
     @contextmanager
     def _get_service():
         """Контекстный менеджер для получения сервиса Google Calendar API."""
-        GroupCalendar._load_credentials()
-        GroupCalendar._get_credentials()
-        service = build("calendar", "v3", credentials=GroupCalendar._creds)
+        ThematicCalendar._load_credentials()
+        ThematicCalendar._get_credentials()
+        service = build("calendar", "v3", credentials=ThematicCalendar._creds)
         yield service
 
     @classmethod
@@ -59,10 +59,10 @@ class GroupCalendar:
         Returns:
             str: ID первого найденного события или пустая строка, если события не найдены.
         """
-        with GroupCalendar._get_service() as service:
+        with ThematicCalendar._get_service() as service:
             try:
                 events_result = service.events().list(
-                    calendarId=GroupCalendar._calendar_id,
+                    calendarId=ThematicCalendar._calendar_id,
                     timeMin=start_time,
                     timeMax=end_time,
                     singleEvents=True,
@@ -80,11 +80,12 @@ class GroupCalendar:
                 return ""
 
     @classmethod
-    def _output(cls, events: list[dict]) -> list[dict]:
+    def _output(cls, events: list[dict], subgroup: str) -> list[dict]:
         """
         Преобразует список событий в удобный формат для вывода информации
         Args:
             events (list[dict]): Список словарей с информацией о событиях.
+            subgroup (str): Название подкатегории для сортировки вывода по названию мероприятия.
         Returns:
             list[dict]: Список словарей с преобразованной информацией о событиях.
             Пример словаря:
@@ -95,50 +96,56 @@ class GroupCalendar:
                 - "transparency": Информация о доступности события (свободен/занят).
         """
         all_events = []
+        filter_words = ['отношени', 'финанс', 'самореализ']
+        filter_word = None
 
-        for event in events:
-            if len(all_events) >= 5:
+        for word in filter_words:
+            if word in subgroup.lower():
+                filter_word = word
                 break
 
+        for event in events:
             transparency = event.get("transparency")
 
             if transparency is None:
                 continue
 
-            events_dict = {}
-            start = event["start"].get("dateTime")
-            end = event["end"].get("dateTime")
+            if filter_word is not None and filter_word in event['summary'].lower():
+                events_dict = {}
+                start = event["start"].get("dateTime")
+                end = event["end"].get("dateTime")
 
-            events_dict["summary"] = event["summary"]
-            events_dict["date"] = {
-                "day": start[8:10],
-                "month": start[5:7],
-                "year": start[:4],
-            }
-            events_dict["startTime"] = start[11:19]
-            events_dict["endTime"] = end[11:19]
-            events_dict["transparency"] = transparency
+                events_dict["summary"] = event["summary"]
+                events_dict["date"] = {
+                    "day": start[8:10],
+                    "month": start[5:7],
+                    "year": start[:4],
+                }
+                events_dict["startTime"] = start[11:19]
+                events_dict["endTime"] = end[11:19]
+                events_dict["transparency"] = transparency
 
-            all_events.append(events_dict)
+                all_events.append(events_dict)
 
         return all_events
 
     @classmethod
-    def check_calendar(cls, start_time: str) -> list or None:
+    def check_calendar(cls, start_time: str, subgroup: str) -> list or None:
         """
-        Проверяет ближайшие события в календаре с использованием учетных данных Calendar._creds
+        Проверяет ближайшие события в календаре с использованием учетных данных ThematicCalendar._creds
         Args:
             start_time (str): Время начала интервала для проверки событий в формате ISO 8601
                               (например, "2023-07-31T00:00:00+03:00").
+            subgroup (str): Название подкатегории для сортировки вывода по названию мероприятия.
         Returns:
             list or None: Словарь с информацией о ближайших событиях или None, если произошла ошибка.
         """
-        with GroupCalendar._get_service() as service:
+        with ThematicCalendar._get_service() as service:
             try:
                 time = Helper.find_time(start_time)
 
                 event_result = service.events().list(
-                    calendarId=GroupCalendar._calendar_id,
+                    calendarId=ThematicCalendar._calendar_id,
                     timeMin=time.start_time,
                     maxResults=10,
                     singleEvents=True,
@@ -147,7 +154,7 @@ class GroupCalendar:
 
                 events = event_result.get("items", [])
 
-                return GroupCalendar._output(events=events)
+                return ThematicCalendar._output(events=events, subgroup=subgroup)
 
             except HttpError as error:
                 print("An error occurred:", error)
@@ -162,23 +169,19 @@ class GroupCalendar:
             end (str): Время окончания интервала для поиска события в формате ISO 8601.
             new_event_data (dict): Словарь с новыми данными для добавления в описание события.
         """
-        with GroupCalendar._get_service() as service:
+        with ThematicCalendar._get_service() as service:
             event_id = cls._get_event_id(start_time=start, end_time=end)
 
             if event_id:
                 try:
-                    event = service.events().get(calendarId=GroupCalendar._calendar_id, eventId=event_id).execute()
+                    event = service.events().get(calendarId=ThematicCalendar._calendar_id, eventId=event_id).execute()
 
                     current_description = event.get('description', '')
-                    new_description = current_description + f"{new_event_data['name']}: {new_event_data['phone_number']}\n"
+                    new_description = current_description + new_event_data["description"] + '\n'
                     event['description'] = new_description
 
-                    visitors_amount = len(event['description'].splitlines())
-                    if visitors_amount >= 5:
-                        event.pop("transparency")
-
                     updated_event = service.events().update(
-                        calendarId=GroupCalendar._calendar_id,
+                        calendarId=ThematicCalendar._calendar_id,
                         eventId=event_id,
                         body=event,
                     ).execute()
@@ -190,27 +193,9 @@ class GroupCalendar:
             else:
                 print("Event ID not found, nothing has been updated.")
 
-    @classmethod
-    def delete_user_event(cls, eid: str):
-        """
-        Удаляет событие из Google Calendar по его идентификатору.
-        Args:
-            eid (str): Идентификатор события, которое нужно удалить.
-        Returns:
-            None: Функция не возвращает значения.
-        """
-        with GroupCalendar._get_service() as service:
-            try:
-                service.events().delete(calendarId=GroupCalendar._calendar_id, eventId=eid).execute()
-            except HttpError as error:
-                print("An error occurred:", error)
-
 
 if __name__ == "__main__":
-    data = {
-        "name": "Ошибка",
-        "phone_number": "0190909090",
-    }
+    data = {'description': 'Денис: 89278685655'}
 
-    print(GroupCalendar.check_calendar(start_time="2023-08-02T00:00:00+03:00"))
-    GroupCalendar.edit_event(start="2023-08-03T20:00:00+03:00", end="2023-08-03T21:00:00+03:00", new_event_data=data)
+    print(ThematicCalendar.check_calendar(start_time="2023-08-02T19:00:00+03:00", subgroup="Про отношения"))
+    # ThematicCalendar.edit_event(start='2023-08-03T22:30:00+03:00', end='2023-08-03T23:30:00+03:00', new_event_data=data)
