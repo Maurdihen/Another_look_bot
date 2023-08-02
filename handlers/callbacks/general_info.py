@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import types
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -166,11 +168,23 @@ async def date_callback_function(callback_query: types.CallbackQuery, state: FSM
         data["events"] = events
 
     if len(events) == 0:
-        await bot.send_message(callback_query.from_user.id, text="Сори в этот день нет свободных слотов")
+        message = await bot.send_message(
+            callback_query.from_user.id, text="Сори в этот день нет свободных слотов, выберите другой"
+        )
+        await asyncio.sleep(2.5)
+        await bot.delete_message(callback_query.message.chat.id, message.message_id)
         return
+    text = f"""
+Вы можете записаться в такие слоты:
 
-    await bot.send_message(callback_query.from_user.id, text="Вы можете записаться в такие слоты:")
-    await bot.send_message(callback_query.from_user.id, text=events[0], reply_markup=next_)
+<b>Название:</b> {events[0]['summary']} 😊
+<b>Дата:</b> {events[0]['date']['day']}.{events[0]['date']['month']}.{events[0]['date']['year']} 📅
+<b>Время начала встречи:</b> {events[0]['startTime'][:-3]} ⏰
+<b>Конец встречи:</b> {events[0]['endTime'][:-3]} 🕒
+    """
+    await bot.send_message(callback_query.from_user.id,
+                           text=text,
+                           reply_markup=next_, parse_mode=types.ParseMode.HTML)
 
     await UserStates.ChooseTime.set()
 
@@ -201,17 +215,27 @@ async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
 
     if len(events) > next_message_number >= 0:
         next_ = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton("Далее", callback_data=f'next_{next_message_number}_next')],
+            [
+                InlineKeyboardButton("◀️", callback_data=f'next_{next_message_number}_back'),
+                InlineKeyboardButton("▶️", callback_data=f'next_{next_message_number}_next')
+             ],
             [InlineKeyboardButton("Записаться", callback_data=f'next_{next_message_number}_signup')],
-            [InlineKeyboardButton("Назад", callback_data=f'next_{next_message_number}_back')],
+            [InlineKeyboardButton("Назад", callback_data='back')],
         ])
+        text = f"""
+        Вы можете записаться в такие слоты:
 
+<b>Название:</b> {events[next_message_number]['summary']} 😊
+<b>Дата:</b> {events[next_message_number]['date']['day']}.{events[next_message_number]['date']['month']}.{events[next_message_number]['date']['year']} 📅
+<b>Время начала встречи:</b> {events[next_message_number]['startTime'][:-3]} ⏰
+<b>Конец встречи:</b> {events[next_message_number]['endTime'][:-3]}
+        """
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=[next_message_number],
+            text=text,
             reply_markup=next_,
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=ParseMode.HTML,
         )
     else:
         await bot.answer_callback_query(callback_query.id, "Это последнее запись.")
@@ -222,6 +246,7 @@ async def back_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
     async with state.proxy() as data:
         cons = data["cons"]
+    print(await state.get_state())
     if cons == "them_group":
         if await state.get_state() == "UserStates:Subgroup":
             await UserStates.ChooseCat.set()
@@ -234,3 +259,4 @@ async def back_callback(callback_query: types.CallbackQuery, state: FSMContext):
             await UserStates.Enroll.set()
         else:
             await UserStates.previous()
+    print(await state.get_state())

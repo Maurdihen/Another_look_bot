@@ -9,4 +9,4 @@ menu_main = ReplyKeyboardMarkup(
 
 number = ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=True, selective=True
-).add(KeyboardButton("Поделиться номером", request_contact=True))
+).add(KeyboardButton("Поделиться номером", request_contact=True)).add(KeyboardButton("Ввести номер в ручную"))
