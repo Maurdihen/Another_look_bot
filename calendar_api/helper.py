@@ -42,6 +42,23 @@ class Helper:
         start_time = start_time.isoformat()
         return Time(**{"start_time": start_time, "end_time": None})
 
+    @classmethod
+    def create_friendly_event(cls, event):
+        event_dict = {}
+        start = event["start"].get("dateTime")
+        end = event["end"].get("dateTime")
+
+        event_dict["summary"] = event["summary"]
+        event_dict["date"] = {
+            "day": start[8:10],
+            "month": start[5:7],
+            "year": start[:4],
+        }
+        event_dict["startTime"] = start[11:19]
+        event_dict["endTime"] = end[11:19]
+        return event_dict
+
+
 
 if __name__ == "__main__":
     time = (Helper.find_time_for_individual("2023-08-03T12:15:00+03:00"))
