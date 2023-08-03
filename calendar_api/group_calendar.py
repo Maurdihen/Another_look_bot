@@ -36,20 +36,8 @@ class GroupCalendar(Calendar):
                 break
 
             if event.get('transparency') == 'transparent':
-                events_dict = {}
-                start = event["start"].get("dateTime")
-                end = event["end"].get("dateTime")
-
-                events_dict["summary"] = event["summary"]
-                events_dict["date"] = {
-                    "day": start[8:10],
-                    "month": start[5:7],
-                    "year": start[:4],
-                }
-                events_dict["startTime"] = start[11:19]
-                events_dict["endTime"] = end[11:19]
-
-                all_events.append(events_dict)
+                event_dict = Helper.create_friendly_event(event)
+                all_events.append(event_dict)
 
         return all_events
 
