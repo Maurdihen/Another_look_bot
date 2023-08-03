@@ -132,6 +132,5 @@ if __name__ == "__main__":
         "phone_number": "0190909090",
     }
 
-
     pprint(GroupCalendar.check_calendar(start_time="2023-08-03T16:00:00+03:00"))
     # GroupCalendar.edit_event(start="2023-08-03T21:00:00+03:00", end="2023-08-03T22:00:00+03:00", new_event_data=data)
