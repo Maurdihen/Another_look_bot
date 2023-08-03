@@ -65,7 +65,7 @@ connect = InlineKeyboardMarkup(inline_keyboard=[
 
 
 next_ = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton("Далее", callback_data='next_0_next')],
+    [InlineKeyboardButton("◀️", callback_data='next_0_back'), InlineKeyboardButton("▶️", callback_data='next_0_next')],
     [InlineKeyboardButton("Записаться", callback_data='next_0_signup')],
-    [InlineKeyboardButton("Назад", callback_data='next_0_back')],
+    [InlineKeyboardButton("⬅️ Назад", callback_data='back')]
 ])
