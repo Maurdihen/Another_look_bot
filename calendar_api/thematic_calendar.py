@@ -95,8 +95,14 @@ class ThematicCalendar(Calendar):
                     event = service.events().get(calendarId=ThematicCalendar._calendar_id, eventId=event_id).execute()
 
                     current_description = event.get('description', '')
-                    new_description = current_description + new_event_data["description"] + '\n'
+                    new_description = current_description + f"{new_event_data['name']}: " \
+                                                            f"{new_event_data['phone_number']}\n"
                     event['description'] = new_description
+
+                    visitors_amount = len(event['description'].splitlines())
+
+                    if visitors_amount >= 5:
+                        event.pop("transparency")
 
                     updated_event = service.events().update(
                         calendarId=ThematicCalendar._calendar_id,
