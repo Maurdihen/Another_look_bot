@@ -6,7 +6,9 @@ from bot_tg.loader import dp, bot
 from buttons.inlines import connect
 from buttons.reply import number
 from states import UserStates
-from calendar_api.individual_calendar import Calendar
+from calendar_api.individual_calendar import IndividualCalendar
+from calendar_api.group_calendar import GroupCalendar
+from calendar_api.thematic_calendar import ThematicCalendar
 
 
 @dp.message_handler(state=UserStates.GetNumber)
@@ -44,7 +46,7 @@ async def my_number(message: Message, state: FSMContext):
             subgroup = "Самореализация"
         elif subgroup == "finance":
             subgroup = "Финансы"
-        cons = f"Тематические группы {subgroup}"
+        cons = "Тематические группы"
 
     async with state.proxy() as data:
         text = data.get("text")
@@ -56,8 +58,14 @@ async def my_number(message: Message, state: FSMContext):
         "start": f"{event['date']['year']}-{event['date']['month']}-{event['date']['day']}T{event['startTime']}+03:00",
         "end": f"{event['date']['year']}-{event['date']['month']}-{event['date']['day']}T{event['endTime']}+03:00",
     }
-    event_id = Calendar.create_event(event_data)
+    if cons == "Индивидуальная консультация":
+        event_id = IndividualCalendar.edit_event(event_data["start"], event_data["end"], event_data)
+    elif cons == "Мини-группа":
+        event_id = GroupCalendar.edit_event(event_data["start"], event_data["end"], event_data)
+    elif cons == "Тематические группы":
+        event_id = ThematicCalendar.edit_event(event_data["start"], event_data["end"], event_data)
     event_data["event_id"] = event_id
+
     text = f"""
 Вы записались на этот слот:
 
