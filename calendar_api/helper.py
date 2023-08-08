@@ -36,10 +36,10 @@ class Helper:
         return Time(**{"start_time": start_time, "end_time": end_time})
 
     @classmethod
-    def find_time_for_group(cls, start_time):
-        start_time = dt.datetime.fromisoformat(start_time.replace("Z", "+00:00"))
-        start_time += dt.timedelta(hours=4)
-        start_time = start_time.isoformat()
+    def find_time_for_group(cls):
+        start_time = dt.datetime.utcnow()
+        start_time += dt.timedelta(hours=7)
+        start_time = start_time.isoformat()[:19] + '+03:00'
         return Time(**{"start_time": start_time, "end_time": None})
 
     @classmethod
@@ -59,6 +59,7 @@ class Helper:
         return event_dict
 
 
-
 if __name__ == "__main__":
-    time = (Helper.find_time_for_individual("2023-08-03T12:15:00+03:00"))
+    time = (Helper.find_time_for_group())
+    print(time.start_time)
+    print(Helper.find_time_for_individual("2023-08-08-12:00:59+03:00").start_time)
