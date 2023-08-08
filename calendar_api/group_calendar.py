@@ -42,18 +42,15 @@ class GroupCalendar(Calendar):
         return all_events
 
     @classmethod
-    def check_calendar(cls, start_time: str) -> list or None:
+    def check_calendar(cls) -> list or None:
         """
         Проверяет ближайшие события в календаре с использованием учетных данных Calendar._creds
-        Args:
-            start_time (str): Время начала интервала для проверки событий в формате ISO 8601
-                              (например, "2023-07-31T00:00:00+03:00").
         Returns:
             list or None: Словарь с информацией о ближайших событиях или None, если произошла ошибка.
         """
         with GroupCalendar._get_service(credentials_file_path, token_file_path) as service:
             try:
-                time = Helper.find_time_for_group(start_time)
+                time = Helper.find_time_for_group()
 
                 event_result = service.events().list(
                     calendarId=GroupCalendar._calendar_id,
@@ -132,5 +129,5 @@ if __name__ == "__main__":
         "phone_number": "0190909090",
     }
 
-    pprint(GroupCalendar.check_calendar(start_time="2023-08-03T16:00:00+03:00"))
+    pprint(GroupCalendar.check_calendar())
     # GroupCalendar.edit_event(start="2023-08-03T21:00:00+03:00", end="2023-08-03T22:00:00+03:00", new_event_data=data)
