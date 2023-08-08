@@ -47,19 +47,17 @@ class ThematicCalendar(Calendar):
         return all_events
 
     @classmethod
-    def check_calendar(cls, start_time: str, subgroup: str) -> list or None:
+    def check_calendar(cls, subgroup: str) -> list or None:
         """
         Проверяет ближайшие события в календаре с использованием учетных данных ThematicCalendar._creds
         Args:
-            start_time (str): Время начала интервала для проверки событий в формате ISO 8601
-                              (например, "2023-07-31T00:00:00+03:00").
             subgroup (str): Название подкатегории для сортировки вывода по названию мероприятия.
         Returns:
             list or None: Словарь с информацией о ближайших событиях или None, если произошла ошибка.
         """
         with ThematicCalendar._get_service(credentials_file_path, token_file_path) as service:
             try:
-                time = Helper.find_time_for_group(start_time)
+                time = Helper.find_time_for_group()
 
                 event_result = service.events().list(
                     calendarId=ThematicCalendar._calendar_id,
@@ -122,5 +120,5 @@ class ThematicCalendar(Calendar):
 if __name__ == "__main__":
     data = {'description': 'Денис: 89278685655'}
 
-    print(ThematicCalendar.check_calendar(start_time="2023-08-02T19:00:00+03:00", subgroup="Про самореализацию"))
+    print(ThematicCalendar.check_calendar(subgroup="Про самореализацию"))
     # ThematicCalendar.edit_event('2023-08-03T22:30:00+03:00', '2023-08-03T23:30:00+03:00', data)
