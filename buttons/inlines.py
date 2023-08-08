@@ -58,6 +58,11 @@ enroll = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
 ])
 
+enroll_them_mini = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton('Записаться', callback_data=cd.new("enroll_them_mini"))],
+    [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
+])
+
 
 connect = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('Связаться с психологом', url="https://t.me/Egeniya_openminds")]
