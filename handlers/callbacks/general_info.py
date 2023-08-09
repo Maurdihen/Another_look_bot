@@ -1,9 +1,14 @@
+import asyncio
+import datetime
+
 from aiogram import types
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot_tg.loader import dp, bot
-from buttons.inlines import this_weeks_button_markup, cd, subgroup_them, enroll, next_
-from calendar_api.individual_calendar import Calendar
+from buttons.inlines import this_weeks_button_markup, cd, subgroup_them, enroll, next_, enroll_them_mini
+from calendar_api.individual_calendar import IndividualCalendar
+from calendar_api.thematic_calendar import ThematicCalendar
+from calendar_api.group_calendar import GroupCalendar
 from utils import convert_date
 from states import UserStates
 
@@ -31,18 +36,6 @@ async def ind_cons_callback(callback_query: types.CallbackQuery, state: FSMConte
     await UserStates.Enroll.set()
 
 
-@dp.callback_query_handler(cd.filter(action="enroll"), state=UserStates.Enroll)
-async def enroll_callback(callback_query: types.CallbackQuery, state: FSMContext):
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(
-        callback_query.from_user.id,
-        'Запись ведется на следующую неделю. Выберете подходящий день и время 🕙',
-        reply_markup=this_weeks_button_markup
-    )
-
-    await UserStates.ChooseDay.set()
-
-
 @dp.callback_query_handler(cd.filter(action='mini_group'), state=UserStates.ChooseCat)
 async def mini_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
@@ -51,7 +44,7 @@ async def mini_cons_callback(callback_query: types.CallbackQuery, state: FSMCont
         "Мини-группа предназначена для глубокой и активной работы по заданной теме.\n\n"
         "В группе принимают участие до 4 человек.\n\n"
         "Присоединиться к ближайшей группе по актуальной для тебя теме можно здесь 🔽🔽🔽",
-        reply_markup=enroll
+        reply_markup=enroll_them_mini
     )
 
     async with state.proxy() as data:
@@ -91,7 +84,7 @@ async def subgroup_relat_them_callback(callback_query: types.CallbackQuery, stat
         '- Этапы развития романтических отношений \n'
         '- Блищость духовная и физическая\n'
         'Мужской и женский взгляд 👀 комфортная скорость для привнесения теории в жизнь. Online',
-        reply_markup=enroll
+        reply_markup=enroll_them_mini
     )
     async with state.proxy() as data:
         data["subgroup"] = cd.parse(callback_query.data)["action"]
@@ -108,7 +101,7 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
         'Курс «В ритме собственной души». Работа в закрытой группе с возможность индивидуальной обратной связи. '
         'Будем исследовать свои сильные слабые стороны, свою собственную «магию» жизни, талантов, призвания и '
         'скоростей. Встречи каждые 3 недели. Online',
-        reply_markup=enroll
+        reply_markup=enroll_them_mini
     )
     async with state.proxy() as data:
         data["subgroup"] = cd.parse(callback_query.data)["action"]
@@ -124,13 +117,25 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
         'Курс Pro финансы .\n\n'
         'Динамическая группа для тех, кто хочет раскачать свое финансовое поле. Встречи 1 раз в месяц, закрытая группа '
         'с собственной траекторией ближайшего развития. 6 встреч = 6 месяцев. Online.',
-        reply_markup=enroll
+        reply_markup=enroll_them_mini
     )
 
     async with state.proxy() as data:
         data["subgroup"] = cd.parse(callback_query.data)["action"]
 
     await UserStates.Enroll.set()
+
+
+@dp.callback_query_handler(cd.filter(action="enroll"), state=UserStates.Enroll)
+async def enroll_callback(callback_query: types.CallbackQuery, state: FSMContext):
+    await bot.answer_callback_query(callback_query.id)
+    await bot.send_message(
+        callback_query.from_user.id,
+        'Запись ведется на следующую неделю. Выберете подходящий день и время 🕙',
+        reply_markup=this_weeks_button_markup
+    )
+
+    await UserStates.ChooseDay.set()
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('date_'), state=UserStates.ChooseDay)
@@ -140,16 +145,48 @@ async def date_callback_function(callback_query: types.CallbackQuery, state: FSM
 
     async with state.proxy() as data:
         cons = data["cons"]
+
+    events = IndividualCalendar.check_calendar(date)
+
+    async with state.proxy() as data:
+        data["events"] = events
+
+    if len(events) == 0:
+        message = await bot.send_message(
+            callback_query.from_user.id, text="Сори в этот день нет свободных слотов, выберите другой"
+        )
+        await asyncio.sleep(2.5)
+        await bot.delete_message(callback_query.message.chat.id, message.message_id)
+        return
+    text = f"""
+Вы можете записаться в такие слоты:
+
+<b>Название:</b> {events[0]['summary']} 😊
+<b>Дата:</b> {events[0]['date']['day']}.{events[0]['date']['month']}.{events[0]['date']['year']} 📅
+<b>Время начала встречи:</b> {events[0]['startTime'][:-3]} ⏰
+<b>Конец встречи:</b> {events[0]['endTime'][:-3]} 🕒
+    """
+    await bot.send_message(callback_query.from_user.id,
+                           text=text,
+                           reply_markup=next_, parse_mode=types.ParseMode.HTML)
+
+    await UserStates.ChooseTime.set()
+
+
+@dp.callback_query_handler(cd.filter(action='enroll_them_mini'), state=UserStates.Enroll)
+async def date_them_mini_callback_function(callback_query: types.CallbackQuery, state: FSMContext):
+    date = datetime.datetime.now()
+    date = convert_date(".".join(str(date).split()[0].split("-")[::-1])) + "+03:00"
+
+    async with state.proxy() as data:
+        cons = data["cons"]
         try:
             subgroup = data["subgroup"]
         except:
-            pass
+            subgroup = None
 
-
-    if cons == "ind_cons":
-        cons = "Индивидуальная консультация"
-    elif cons == "mini_group":
-        cons = "Мини-группа"
+    if cons == "mini_group":
+        events = GroupCalendar.check_calendar(date)
     elif cons == "them_group":
         if subgroup == "about_relat":
             subgroup = "Про отношения"
@@ -157,20 +194,22 @@ async def date_callback_function(callback_query: types.CallbackQuery, state: FSM
             subgroup = "Самореализация"
         elif subgroup == "finance":
             subgroup = "Финансы"
-        cons = f"Тематические группы {subgroup}"
+        events = ThematicCalendar.check_calendar(date, subgroup)
 
-    print(cons, date)
-    events = Calendar.check_calendar(date, cons)
-    print(events)
     async with state.proxy() as data:
         data["events"] = events
 
-    if len(events) == 0:
-        await bot.send_message(callback_query.from_user.id, text="Сори в этот день нет свободных слотов")
-        return
+    text = f"""
+Вы можете записаться в такие слоты:
 
-    await bot.send_message(callback_query.from_user.id, text="Вы можете записаться в такие слоты:")
-    await bot.send_message(callback_query.from_user.id, text=events[0], reply_markup=next_)
+<b>Название:</b> {events[0]['summary']} 😊
+<b>Дата:</b> {events[0]['date']['day']}.{events[0]['date']['month']}.{events[0]['date']['year']} 📅
+<b>Время начала встречи:</b> {events[0]['startTime'][:-3]} ⏰
+<b>Конец встречи:</b> {events[0]['endTime'][:-3]} 🕒
+    """
+    await bot.send_message(callback_query.from_user.id,
+                           text=text,
+                           reply_markup=next_, parse_mode=types.ParseMode.HTML)
 
     await UserStates.ChooseTime.set()
 
@@ -201,17 +240,27 @@ async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
 
     if len(events) > next_message_number >= 0:
         next_ = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton("Далее", callback_data=f'next_{next_message_number}_next')],
+            [
+                InlineKeyboardButton("◀️", callback_data=f'next_{next_message_number}_back'),
+                InlineKeyboardButton("▶️", callback_data=f'next_{next_message_number}_next')
+             ],
             [InlineKeyboardButton("Записаться", callback_data=f'next_{next_message_number}_signup')],
-            [InlineKeyboardButton("Назад", callback_data=f'next_{next_message_number}_back')],
+            [InlineKeyboardButton("Назад", callback_data='back')],
         ])
+        text = f"""
+        Вы можете записаться в такие слоты:
 
+<b>Название:</b> {events[next_message_number]['summary']} 😊
+<b>Дата:</b> {events[next_message_number]['date']['day']}.{events[next_message_number]['date']['month']}.{events[next_message_number]['date']['year']} 📅
+<b>Время начала встречи:</b> {events[next_message_number]['startTime'][:-3]} ⏰
+<b>Конец встречи:</b> {events[next_message_number]['endTime'][:-3]}
+        """
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=[next_message_number],
+            text=text,
             reply_markup=next_,
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=ParseMode.HTML,
         )
     else:
         await bot.answer_callback_query(callback_query.id, "Это последнее запись.")
@@ -222,6 +271,7 @@ async def back_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
     async with state.proxy() as data:
         cons = data["cons"]
+    print(await state.get_state())
     if cons == "them_group":
         if await state.get_state() == "UserStates:Subgroup":
             await UserStates.ChooseCat.set()
@@ -229,8 +279,16 @@ async def back_callback(callback_query: types.CallbackQuery, state: FSMContext):
             await UserStates.Subgroup.set()
         elif await state.get_state() == "UserStates:ChooseDay":
             await UserStates.Enroll.set()
+        elif await state.get_state() == "UserStates:ChooseTime":
+            await UserStates.Enroll.set()
+    elif cons == "mini_group":
+        if await state.get_state() == "UserStates:Enroll":
+            await UserStates.ChooseCat.set()
+        elif await state.get_state() == "UserStates:ChooseTime":
+            await UserStates.Enroll.set()
     else:
         if await state.get_state() == "UserStates:ChooseDay":
             await UserStates.Enroll.set()
         else:
             await UserStates.previous()
+    print(await state.get_state())
