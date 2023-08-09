@@ -6,25 +6,27 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class Users(Base):
-    __tablename__ = "users"
+class User(Base):
+    __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
     user_id_tg = Column(Integer)
-    name = Column(String)
+    full_name = Column(String, default=None)
+    phone_number = Column(String, default=None)
 
 
-class Notes(Base):
-    __tablename__ = "notes"
+class Note(Base):
+    __tablename__ = "note"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    date = Column(String)
-    time = Column(String)
+    user_id = Column(Integer, ForeignKey('user.user_id_tg'))
+    event_id = Column(String)
+    start = Column(String(8))
+    end = Column(String(8))
     category = Column(String)
     subcategory = Column(String)
 
-    user = relationship("Users", back_populates="notes")
+    user = relationship("User", back_populates="note")
 
 
-Users.notes = relationship("Notes", back_populates="user")
+User.notes = relationship("Note", back_populates="user")
