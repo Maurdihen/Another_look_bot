@@ -9,4 +9,4 @@ class UserStates(StatesGroup):
     ChooseTime = State()
     GetNumber = State()
     ReqestCont = State()
-
+    PhoneNumber = State()
