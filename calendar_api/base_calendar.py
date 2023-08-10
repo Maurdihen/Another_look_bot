@@ -1,6 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 
+import google
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -27,6 +28,9 @@ class Calendar(ABC):
         if not Calendar._creds or not Calendar._creds.valid:
             if Calendar._creds and Calendar._creds.expired and Calendar._creds.refresh_token:
                 Calendar._creds.refresh(Request())
+                # os.remove(token_file_path)
+                # flow = InstalledAppFlow.from_client_secrets_file(credentials_file_path, Calendar._scopes)
+                # Calendar._creds = flow.run_local_server(port=0)
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(credentials_file_path, Calendar._scopes)
                 Calendar._creds = flow.run_local_server(port=0)
@@ -77,3 +81,4 @@ class Calendar(ABC):
     @abstractmethod
     def edit_event(cls, start: str, end: str, new_event_data: dict):
         pass
+

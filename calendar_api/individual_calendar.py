@@ -105,17 +105,20 @@ class IndividualCalendar(Calendar):
                 print("Event ID not found, nothing has been updated.")
 
     @classmethod
-    def delete_user_event(cls, eid: str):
-        """
-        Удаляет событие из Google Calendar по его идентификатору.
-        Args:
-            eid (str): Идентификатор события, которое нужно удалить.
-        Returns:
-            None: Функция не возвращает значения.
-        """
+    def cancel_of_event(cls, event_id: str):
         with IndividualCalendar._get_service(credentials_file_path, token_file_path) as service:
             try:
-                service.events().delete(calendarId=IndividualCalendar._calendar_id, eventId=eid).execute()
+                event = service.events().get(calendarId=IndividualCalendar._calendar_id, eventId=event_id).execute()
+                event['transparency'] = 'transparent'
+                new_description = "Человек отменил запись"
+                event['description'] = new_description
+                updated_event = service.events().update(
+                    calendarId=IndividualCalendar._calendar_id,
+                    eventId=event_id,
+                    body=event,
+                ).execute()
+                print("Event updated:", updated_event.get('htmlLink'))
+
             except HttpError as error:
                 print("An error occurred:", error)
 
