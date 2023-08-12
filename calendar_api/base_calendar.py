@@ -1,14 +1,13 @@
 import os
 from abc import ABC, abstractmethod
 
-import google
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from contextlib import contextmanager
 
 from googleapiclient.errors import HttpError
+
+import utils
 
 
 class Calendar(ABC):
@@ -27,13 +26,15 @@ class Calendar(ABC):
         """Получение действительных учетных данных или обновление их, если они просрочены"""
         if not Calendar._creds or not Calendar._creds.valid:
             if Calendar._creds and Calendar._creds.expired and Calendar._creds.refresh_token:
-                Calendar._creds.refresh(Request())
-                # os.remove(token_file_path)
-                # flow = InstalledAppFlow.from_client_secrets_file(credentials_file_path, Calendar._scopes)
-                # Calendar._creds = flow.run_local_server(port=0)
+                os.remove(token_file_path)
+                auth_url, flow, local_server, wsgi_app = utils.create_auth_link(credentials_file_path, utils.data)
+                print(auth_url)
+                Calendar._creds = utils.run_server(auth_url, flow, local_server, wsgi_app, utils.data)
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(credentials_file_path, Calendar._scopes)
-                Calendar._creds = flow.run_local_server(port=0)
+                auth_url, flow, local_server, wsgi_app = utils.create_auth_link(credentials_file_path, utils.data)
+                print(auth_url)
+                Calendar._creds = utils.run_server(auth_url, flow, local_server, wsgi_app, utils.data)
+
             with open(token_file_path, "w") as token:
                 token.write(Calendar._creds.to_json())
 
@@ -81,4 +82,3 @@ class Calendar(ABC):
     @abstractmethod
     def edit_event(cls, start: str, end: str, new_event_data: dict):
         pass
-
