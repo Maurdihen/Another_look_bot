@@ -116,6 +116,10 @@ class ThematicCalendar(Calendar):
             else:
                 print("Event ID not found, nothing has been updated.")
 
+    @classmethod
+    def cancel_of_event(cls):
+        pass
+
 
 if __name__ == "__main__":
     data = {'description': 'Денис: 89278685655'}

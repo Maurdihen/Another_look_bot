@@ -108,19 +108,8 @@ class GroupCalendar(Calendar):
                 print("Event ID not found, nothing has been updated.")
 
     @classmethod
-    def delete_user_event(cls, eid: str):
-        """
-        Удаляет событие из Google Calendar по его идентификатору.
-        Args:
-            eid (str): Идентификатор события, которое нужно удалить.
-        Returns:
-            None: Функция не возвращает значения.
-        """
-        with GroupCalendar._get_service(credentials_file_path, token_file_path) as service:
-            try:
-                service.events().delete(calendarId=GroupCalendar._calendar_id, eventId=eid).execute()
-            except HttpError as error:
-                print("An error occurred:", error)
+    def cancel_of_event(cls):
+        pass
 
 
 if __name__ == "__main__":
