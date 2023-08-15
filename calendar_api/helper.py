@@ -59,6 +59,7 @@ class Helper:
         }
         event_dict["startTime"] = start[11:19]
         event_dict["endTime"] = end[11:19]
+        event_dict["event_id"] = event["id"]
         return event_dict
 
     @classmethod
@@ -78,4 +79,4 @@ class Helper:
 
 
 if __name__ == "__main__":
-    print(Helper.is_cancelable("2023-08-13-13:20:22+03:00"))
+    print(Helper.is_cancelable("2023-08-16-19:57:40+03:00"))
