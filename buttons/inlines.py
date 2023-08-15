@@ -65,7 +65,7 @@ enroll_them_mini = InlineKeyboardMarkup(inline_keyboard=[
 
 
 connect = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton('Связаться с психологом', url="https://t.me/Egeniya_openminds")]
+    [InlineKeyboardButton('Связаться с психологом', url="https://t.me/Evgeniya_drugoy_vzglyad")]
 ])
 
 
