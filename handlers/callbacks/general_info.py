@@ -175,9 +175,6 @@ async def date_callback_function(callback_query: types.CallbackQuery, state: FSM
 
 @dp.callback_query_handler(cd.filter(action='enroll_them_mini'), state=UserStates.Enroll)
 async def date_them_mini_callback_function(callback_query: types.CallbackQuery, state: FSMContext):
-    date = datetime.datetime.now()
-    date = convert_date(".".join(str(date).split()[0].split("-")[::-1])) + "+03:00"
-
     async with state.proxy() as data:
         cons = data["cons"]
         try:
@@ -186,7 +183,7 @@ async def date_them_mini_callback_function(callback_query: types.CallbackQuery, 
             subgroup = None
 
     if cons == "mini_group":
-        events = GroupCalendar.check_calendar(date)
+        events = GroupCalendar.check_calendar()
     elif cons == "them_group":
         if subgroup == "about_relat":
             subgroup = "Про отношения"
@@ -194,11 +191,18 @@ async def date_them_mini_callback_function(callback_query: types.CallbackQuery, 
             subgroup = "Самореализация"
         elif subgroup == "finance":
             subgroup = "Финансы"
-        events = ThematicCalendar.check_calendar(date, subgroup)
+        events = ThematicCalendar.check_calendar(subgroup)
 
     async with state.proxy() as data:
         data["events"] = events
 
+    if len(events) == 0:
+        message = await bot.send_message(
+            callback_query.from_user.id, text="Сори в этот день нет свободных слотов, выберите другой"
+        )
+        await asyncio.sleep(2.5)
+        await bot.delete_message(callback_query.message.chat.id, message.message_id)
+        return
     text = f"""
 Вы можете записаться в такие слоты:
 
@@ -222,7 +226,7 @@ async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
         events = data["events"]
 
     if callback_query.data.split('_')[2] == "signup":
-        await bot.send_message(callback_query.from_user.id, text="Для того чтобы бот смог вас записать отправте "
+        message = await bot.send_message(callback_query.from_user.id, text="Для того чтобы бот смог вас записать отправте "
                                                                  "пожалуйста своё имя и фамилию в формате Имя Фамилия")
 
         event = events[int(callback_query.data.split('_')[1])]
@@ -232,6 +236,8 @@ async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
             data["event"] = event
 
         await UserStates.GetNumber.set()
+        await asyncio.sleep(2.5)
+        await bot.delete_message(callback_query.message.chat.id, message.message_id)
         return
     elif callback_query.data.split('_')[2] == "back":
         next_message_number = message_number - 1
