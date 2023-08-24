@@ -21,7 +21,7 @@ class PostRequest:
     def __init__(self, event_data):
         self.event_data = event_data
 
-    def __feel_dicts(self):
+    def __take_data(self):
         user_data, note_data = {}, {}
 
         user_data["user_id_tg"] = self.event_data["user_id"]
@@ -38,7 +38,7 @@ class PostRequest:
         return user_data, note_data
 
     def post_to_db(self):
-        user_data, note_data = self.__feel_dicts()
+        user_data, note_data = self.__take_data()
         user_service.create_user(user_data)
         note_service.create_note(note_data)
 
