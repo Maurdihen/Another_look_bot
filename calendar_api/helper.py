@@ -37,6 +37,9 @@ class Helper:
 
     @classmethod
     def find_time_for_group(cls):
+        # start_time = dt.datetime.now()
+        # start_time += dt.timedelta(hours=4)
+        # or ->
         start_time = dt.datetime.utcnow()
         start_time += dt.timedelta(hours=7)
         start_time = start_time.isoformat()[:19] + '+03:00'
@@ -56,10 +59,24 @@ class Helper:
         }
         event_dict["startTime"] = start[11:19]
         event_dict["endTime"] = end[11:19]
+        event_dict["event_id"] = event["id"]
         return event_dict
+
+    @classmethod
+    def is_cancelable(cls, time):
+        current_time = dt.datetime.now(dt.timezone(dt.timedelta(hours=3)))
+        tz_offset = current_time.strftime("%z")
+        current_time = current_time.strftime("%Y-%m-%d-%H:%M:%S") + f'{tz_offset[:-2]}:{tz_offset[-2:]}'
+
+        current_time = dt.datetime.strptime(current_time, "%Y-%m-%d-%H:%M:%S%z")
+        time = dt.datetime.strptime(time, "%Y-%m-%d-%H:%M:%S%z")
+
+        time_diff = time - current_time
+
+        if time_diff < dt.timedelta(hours=24):
+            return False
+        return True
 
 
 if __name__ == "__main__":
-    time = (Helper.find_time_for_group())
-    print(time.start_time)
-    print(Helper.find_time_for_individual("2023-08-08-12:00:59+03:00").start_time)
+    print(Helper.is_cancelable("2023-08-16-19:57:40+03:00"))

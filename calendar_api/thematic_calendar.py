@@ -116,9 +116,38 @@ class ThematicCalendar(Calendar):
             else:
                 print("Event ID not found, nothing has been updated.")
 
+    @classmethod
+    def cancel_of_event(cls, event_id: str, user_name: str, user_phone_number: str):
+        with ThematicCalendar._get_service(credentials_file_path, token_file_path) as service:
+            try:
+                event = service.events().get(calendarId=ThematicCalendar._calendar_id, eventId=event_id).execute()
+                new_description = ''
+
+                for line in event['description'].splitlines():
+                    name, phone_number = line.split()
+                    if user_name in name and user_phone_number in phone_number:
+                        continue
+                    else:
+                        new_description += name + ' ' + phone_number + '\n'
+
+                event['description'] = new_description
+
+                updated_event = service.events().update(
+                    calendarId=ThematicCalendar._calendar_id,
+                    eventId=event_id,
+                    body=event,
+                ).execute()
+
+                print("Event updated:", updated_event.get('htmlLink'))
+
+            except HttpError as error:
+                print("An error occurred:", error)
+
 
 if __name__ == "__main__":
     data = {'description': 'Денис: 89278685655'}
 
     print(ThematicCalendar.check_calendar(subgroup="Про самореализацию"))
     # ThematicCalendar.edit_event('2023-08-03T22:30:00+03:00', '2023-08-03T23:30:00+03:00', data)
+    ThematicCalendar.cancel_of_event(event_id='0c4p1c4d9pnli20hom0l6lurr9', user_name='Денис',
+                                     user_phone_number='79278685655')

@@ -108,17 +108,34 @@ class GroupCalendar(Calendar):
                 print("Event ID not found, nothing has been updated.")
 
     @classmethod
-    def delete_user_event(cls, eid: str):
-        """
-        Удаляет событие из Google Calendar по его идентификатору.
-        Args:
-            eid (str): Идентификатор события, которое нужно удалить.
-        Returns:
-            None: Функция не возвращает значения.
-        """
+    def cancel_of_event(cls, event_id: str, user_name: str, user_phone_number: str):
         with GroupCalendar._get_service(credentials_file_path, token_file_path) as service:
             try:
-                service.events().delete(calendarId=GroupCalendar._calendar_id, eventId=eid).execute()
+                event = service.events().get(calendarId=GroupCalendar._calendar_id, eventId=event_id).execute()
+                new_description = ''
+                visitors_amount = 0
+
+                for line in event['description'].splitlines():
+                    name, phone_number = line.split()
+                    if user_name in name and user_phone_number in phone_number:
+                        continue
+                    else:
+                        new_description += name + ' ' + phone_number + '\n'
+                        visitors_amount += 1
+
+                event['description'] = new_description
+
+                if visitors_amount < 5:
+                    event['transparency'] = 'transparent'
+
+                updated_event = service.events().update(
+                    calendarId=GroupCalendar._calendar_id,
+                    eventId=event_id,
+                    body=event,
+                ).execute()
+
+                print("Event updated:", updated_event.get('htmlLink'))
+
             except HttpError as error:
                 print("An error occurred:", error)
 
@@ -131,3 +148,5 @@ if __name__ == "__main__":
 
     pprint(GroupCalendar.check_calendar())
     # GroupCalendar.edit_event(start="2023-08-03T21:00:00+03:00", end="2023-08-03T22:00:00+03:00", new_event_data=data)
+    GroupCalendar.cancel_of_event(event_id='4f9m9f114ktti17fdibnsmgneg', user_name='Рома',
+                                  user_phone_number='89765965491')
