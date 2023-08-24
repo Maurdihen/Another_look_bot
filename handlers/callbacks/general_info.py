@@ -138,7 +138,7 @@ async def enroll_callback(callback_query: types.CallbackQuery, state: FSMContext
     await UserStates.ChooseDay.set()
 
 
-@dp.callback_query_handler(lambda c: c.data.startswith('date_'), state=UserStates.ChooseDay)
+@dp.callback_query_handler(lambda c: c._user_data.startswith('date_'), state=UserStates.ChooseDay)
 async def date_callback_function(callback_query: types.CallbackQuery, state: FSMContext):
     selected_date = callback_query.data.split('_')[1]
     date = convert_date(selected_date) + "+03:00"
@@ -218,7 +218,7 @@ async def date_them_mini_callback_function(callback_query: types.CallbackQuery, 
     await UserStates.ChooseTime.set()
 
 
-@dp.callback_query_handler(lambda c: c.data.startswith('next_'), state=UserStates.ChooseTime)
+@dp.callback_query_handler(lambda c: c._user_data.startswith('next_'), state=UserStates.ChooseTime)
 async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
     message_number = int(callback_query.data.split('_')[1])
 
@@ -272,7 +272,7 @@ async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
         await bot.answer_callback_query(callback_query.id, "Это последнее запись.")
 
 
-@dp.callback_query_handler(lambda c: c.data.startswith('back'), state="*")
+@dp.callback_query_handler(lambda c: c._user_data.startswith('back'), state="*")
 async def back_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
     async with state.proxy() as data:

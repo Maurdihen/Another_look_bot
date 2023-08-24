@@ -15,8 +15,8 @@ class User(Base):
     phone_number = Column(String, default=None)
 
 
-class Note(Base):
-    __tablename__ = "note"
+class Event(Base):
+    __tablename__ = "event"
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('user.user_id_tg'))
@@ -26,7 +26,7 @@ class Note(Base):
     category = Column(String)
     subcategory = Column(String)
 
-    user = relationship("User", back_populates="note")
+    user = relationship("User", back_populates="event")
 
 
-User.notes = relationship("Note", back_populates="user")
+User.notes = relationship("Event", back_populates="user")

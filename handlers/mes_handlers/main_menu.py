@@ -6,12 +6,12 @@ from bot_tg.loader import dp, bot
 from buttons.inlines import general_info_markup
 
 from setup_db.sqlite_db import session
-from db_work.service.note_service import NoteService
+from db_work.service.event_service import EventService
 from db_work.service.user_service import UserService
 from states import UserStates
 
 user_service = UserService(session)
-note_service = NoteService(session)
+note_service = EventService(session)
 
 
 @dp.message_handler(lambda message: message.text == "Записаться")

@@ -1,19 +1,20 @@
-from db_work.crud.implemented import user_service, note_service
+from db_work.crud.implemented import user_service, event_service
 
 
 class GetRequest:
 
     def __init__(self, tg_id):
-        self.user = user_service.get_user_by_tg_id(tg_id)
+        self._user = user_service.get_user_by_tg_id(tg_id)
+        self._events = event_service.get_events_by_user_id(tg_id)
 
     def get_name(self):
-        return self.user["full_name"]
+        return self._user.get("full_name")
 
     def get_number(self):
-        return self.user["phone_number"]
+        return self._user.get("phone_number")
 
-    def get_notes(self):
-        ...
+    def get_events(self):
+        return self._events
 
 
 class PostRequest:
@@ -38,23 +39,23 @@ class PostRequest:
         return user_data, note_data
 
     def post_to_db(self):
-        user_data, note_data = self.__take_data()
+        user_data, event_data = self.__take_data()
         user_service.create_user(user_data)
-        note_service.create_note(note_data)
+        event_service.create_event(event_data)
 
 
 class PatchRequest:
 
     def __init__(self, tg_id):
-        self.data = {"user_id_tg": tg_id}
+        self._user_data = {"user_id_tg": tg_id}
 
     def edit_name(self, name):
-        self.data["full_name"] = name
-        user_service.update_user(self.data)
+        self._user_data["full_name"] = name
+        user_service.update_user(self._user_data)
 
     def edit_number(self, number):
-        self.data["phone_number"] = number
-        user_service.update_user(self.data)
+        self._user_data["phone_number"] = number
+        user_service.update_user(self._user_data)
 
 
 class DeleteRequest:
