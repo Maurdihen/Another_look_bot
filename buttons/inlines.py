@@ -58,8 +58,18 @@ enroll = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
 ])
 
+enroll_admin = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton('Добавить, изменить', callback_data=cd.new("enroll"))],
+    [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
+])
+
 enroll_them_mini = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('Записаться', callback_data=cd.new("enroll_them_mini"))],
+    [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
+])
+
+enroll_them_mini_admin = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton('Добавить, изменить', callback_data=cd.new("enroll_them_mini"))],
     [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
 ])
 
