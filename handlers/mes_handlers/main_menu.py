@@ -6,12 +6,12 @@ from bot_tg.loader import dp, bot
 from buttons.inlines import general_info_markup
 
 from setup_db.sqlite_db import session
-from db_work.service.notes_service import NotesService
-from db_work.service.users_service import UsersService
+from db_work.service.event_service import EventService
+from db_work.service.user_service import UserService
 from states import UserStates
 
-users_service = UsersService(session)
-notes_service = NotesService(session)
+user_service = UserService(session)
+note_service = EventService(session)
 
 
 @dp.message_handler(lambda message: message.text == "Записаться")
@@ -30,6 +30,7 @@ async def general_inf(message: types.Message):
 
     await UserStates.ChooseCat.set()
 
+
 @dp.message_handler(lambda message: message.text == "Мои записи", state="*")
 async def my_notes(message: types.Message):
     await asyncio.sleep(0.5)
@@ -39,7 +40,7 @@ async def my_notes(message: types.Message):
     except Exception as e:
         print("Ошибка при удалении сообщения:", e)
 
-    user = users_service.get_user_by_tg_id(message.from_user.id)
+    user = user_service.get_user_by_tg_id(message.from_user.id)
 
     user_notes = user.notes
     list_user_notes = []
