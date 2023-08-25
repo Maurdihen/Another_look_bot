@@ -20,6 +20,9 @@ class EventDAO:
 
         return new_event
 
+    def update_event(self):
+        ...
+
     def delete_event(self, base_id: int) -> None:
         event = self.get_event_by_bid(base_id)
 
