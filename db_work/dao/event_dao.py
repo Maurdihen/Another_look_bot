@@ -20,8 +20,9 @@ class EventDAO:
 
         return new_event
 
-    def update_event(self):
-        ...
+    def update_event(self, event) -> None:
+        self.session.add(event)
+        self.session.commit()
 
     def delete_event(self, base_id: int) -> None:
         event = self.get_event_by_bid(base_id)

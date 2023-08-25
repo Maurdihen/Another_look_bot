@@ -16,9 +16,7 @@ class UserService:
     def create_user(self, data) -> User:
         return self.user_dao.create_user(data)
 
-    def update_user(self, data) -> None:
-        user = self.get_user_by_tg_id(data["user_id_tg"])
-
+    def update_user(self, user, data) -> None:
         if data.get("full_name"):
             user.full_name = data["full_name"]
         if data.get("phone_number"):
