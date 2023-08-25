@@ -23,6 +23,7 @@ class PostRequest:
         self.event_data = event_data
 
     def __take_data(self):
+        # need update method
         user_data, note_data = {}, {}
 
         user_data["user_id_tg"] = self.event_data["user_id"]
@@ -62,3 +63,6 @@ class DeleteRequest:
 
     def __init__(self, event_id):
         self.event_id = event_id
+
+    def close_event(self):
+        event_service.delete_event(self.event_id)

@@ -25,7 +25,3 @@ class UserService:
             user.phone_number = data["phone_number"]
 
         self.user_dao.update_user(user)
-
-    def delete_user(self, user_id_tg: int) -> None:
-        # Аналогично, нужна ли функиця?
-        self.user_dao.delete_user(user_id_tg)

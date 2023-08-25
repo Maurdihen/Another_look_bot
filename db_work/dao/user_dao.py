@@ -23,10 +23,3 @@ class UserDAO:
     def update_user(self, user) -> None:
         self.session.add(user)
         self.session.commit()
-
-    def delete_user(self, user_id_tg: int) -> None:
-        # Есть смысл этой функции?
-        user = self.get_user_by_tg_id(user_id_tg)
-
-        self.session.delete(user)
-        self.session.commit()
