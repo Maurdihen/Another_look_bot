@@ -1,0 +1,13 @@
+class AdminRequest:
+
+    def get_events(self):
+        ...
+
+    def create_event(self):
+        ...
+
+    def update_event(self):
+        ...
+
+    def delete_event(self):
+        ...
