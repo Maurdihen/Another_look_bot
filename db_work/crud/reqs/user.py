@@ -5,9 +5,9 @@ class UserRequest:
     def __init__(self, tg_id):
         try:
             self._user = user_service.get_user_by_tg_id(tg_id)
-        except:
+        except Exception:
             self._user = self._create_new_user(tg_id)
-        self._events = event_service.get_events_by_user_id(tg_id)
+        self._events = event_service.get_events_by_tg_id(tg_id)
 
     @staticmethod
     def _create_new_user(tg_id):

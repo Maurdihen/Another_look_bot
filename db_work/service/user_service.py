@@ -7,11 +7,11 @@ class UserService:
     def __init__(self, session: Session):
         self.user_dao = UserDAO(session)
 
-    def get_user_by_id(self, user_id: int) -> User:
-        return self.user_dao.get_user_by_id(user_id)
+    def get_user_by_bid(self, base_id: int) -> User:
+        return self.user_dao.get_user_by_bid(base_id)
 
-    def get_user_by_tg_id(self, user_id_tg: int) -> User:
-        return self.user_dao.get_user_by_tg_id(user_id_tg)
+    def get_user_by_tg_id(self, tg_id: int) -> User:
+        return self.user_dao.get_user_by_tg_id(tg_id)
 
     def create_user(self, data) -> User:
         return self.user_dao.create_user(data)
