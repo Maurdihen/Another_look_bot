@@ -1,3 +1,5 @@
+from typing import List, Type
+
 from sqlalchemy.orm import Session
 from db_work.dao.models.model import Event
 
@@ -11,6 +13,9 @@ class EventDAO:
 
     def get_events_by_tg_id(self, tg_user_id: int) -> list[Event]:
         return self.session.query(Event).filter_by(tg_user_id=tg_user_id).all()
+
+    def get_all_events(self) -> list[Type[Event]]:
+        return self.session.query(Event).all()
 
     def create_event(self, data) -> Event:
         new_event = Event(**data)
