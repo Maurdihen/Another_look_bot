@@ -9,8 +9,8 @@ class EventDAO:
     def get_event_by_bid(self, base_id: int) -> Event:
         return self.session.query(Event).filter_by(id=base_id).first()
 
-    def get_events_by_user_id(self, user_id: int) -> list[Event]:
-        return self.session.query(Event).filter_by(user_id=user_id).all()
+    def get_events_by_tg_id(self, tg_user_id: int) -> list[Event]:
+        return self.session.query(Event).filter_by(tg_user_id=tg_user_id).all()
 
     def create_event(self, data) -> Event:
         new_event = Event(**data)
@@ -19,6 +19,10 @@ class EventDAO:
         self.session.commit()
 
         return new_event
+
+    def update_event(self, event) -> None:
+        self.session.add(event)
+        self.session.commit()
 
     def delete_event(self, base_id: int) -> None:
         event = self.get_event_by_bid(base_id)
