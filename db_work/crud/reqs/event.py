@@ -1,5 +1,8 @@
 class EventRequest:
 
+    def get_events(self):
+        ...
+
     def book_event(self):
         ...
 

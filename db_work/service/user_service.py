@@ -1,3 +1,5 @@
+from typing import Type
+
 from sqlalchemy.orm import Session
 from db_work.dao.models.model import User
 from db_work.dao.user_dao import UserDAO
@@ -10,7 +12,7 @@ class UserService:
     def get_user_by_bid(self, base_id: int) -> User:
         return self.user_dao.get_user_by_bid(base_id)
 
-    def get_user_by_tg_id(self, tg_id: int) -> User:
+    def get_user_by_tg_id(self, tg_id: int) -> Type[User] | None:
         return self.user_dao.get_user_by_tg_id(tg_id)
 
     def create_user(self, data) -> User:
