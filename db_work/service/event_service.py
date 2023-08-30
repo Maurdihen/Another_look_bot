@@ -1,4 +1,4 @@
-from typing import List, Type
+from typing import Type
 
 from sqlalchemy.orm import Session
 from db_work.dao.models.model import Event
@@ -9,11 +9,14 @@ class EventService:
     def __init__(self, session: Session):
         self.event_dao = EventDAO(session)
 
-    def get_event_by_bid(self, base_id: int) -> Event:
+    def get_event_by_bid(self, base_id: int) -> Type[Event] | None:
         return self.event_dao.get_event_by_bid(base_id)
 
-    def get_events_by_tg_id(self, tg_user_id: int) -> list[Event]:
+    def get_events_by_tg_id(self, tg_user_id: int) -> list[Type[Event]]:
         return self.event_dao.get_events_by_tg_id(tg_user_id)
+
+    def get_free_events(self) -> list[Type[Event]]:
+        return self.event_dao.get_free_events()
 
     def get_all_events(self) -> list[Type[Event]]:
         return self.event_dao.get_all_events()

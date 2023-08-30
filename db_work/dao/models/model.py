@@ -24,8 +24,6 @@ class Event(Base):
     category = Column(String)
     subcategory = Column(String)
     is_free = Column(Boolean, default=True)
+    # user = relationship("User", back_populates="event")
 
-    user = relationship("User", back_populates="event")
-
-
-User.notes = relationship("Event", back_populates="user")
+# User.notes = relationship("Event", back_populates="user")
