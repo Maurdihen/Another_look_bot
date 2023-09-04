@@ -10,3 +10,4 @@ class UserStates(StatesGroup):
     GetNumber = State()
     ReqestCont = State()
     PhoneNumber = State()
+    Admin = State()
