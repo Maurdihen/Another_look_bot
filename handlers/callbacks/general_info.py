@@ -1,104 +1,70 @@
 import asyncio
-import datetime
 
 from aiogram import types
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot_tg.loader import dp, bot
-from buttons.inlines import this_weeks_button_markup, cd, subgroup_them, enroll, next_, enroll_them_mini, enroll_admin, \
-    enroll_them_mini_admin
+from buttons.inlines import this_weeks_button_markup, cd, subgroup_them, enroll, next_, enroll_them_mini
 from utils import convert_date
 from states import UserStates
 
 from aiogram.dispatcher import FSMContext
 
 
-@dp.callback_query_handler(cd.filter(action="ind_cons"), state=[UserStates.ChooseCat, UserStates.Admin])
+@dp.callback_query_handler(cd.filter(action="ind_cons"), state=UserStates.ChooseCat)
 async def ind_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
-    if await state.get_state() == "UserStates:Admin":
-        await bot.send_message(
-            callback_query.from_user.id,
-            "Добавить, удалить, изменить индивидуальную консультацию",
-            reply_markup=enroll_admin
-        )
-    else:
-        await bot.send_message(
-            callback_query.from_user.id,
-            'Индивидуальная консультация-это встреча с психологом (Гештальт-терапевтом), на которой ты сможешь поделиться '
-            'тем, что тебя беспокоит или тем, что ты хочешь изменить.\n\n'
-            'Также задашь свои вопросы и узнаешь себя лучше.\n\n'
-            'ℹ️Работа по изменению структуры личности требует регулярных встреч.\n\n'
-            'ℹ️Короткий ситуационный запрос подразумевает от 4 до 8 консультаций.\n\n'
-            'Бережно. Конфиденциально.\n\n'
-            'Приходи , я рада тебе 🤍',
-            reply_markup=enroll
-        )
+    await bot.send_message(
+        callback_query.from_user.id,
+        'Индивидуальная консультация-это встреча с психологом (Гештальт-терапевтом), на которой ты сможешь поделиться '
+        'тем, что тебя беспокоит или тем, что ты хочешь изменить.\n\n'
+        'Также задашь свои вопросы и узнаешь себя лучше.\n\n'
+        'ℹ️Работа по изменению структуры личности требует регулярных встреч.\n\n'
+        'ℹ️Короткий ситуационный запрос подразумевает от 4 до 8 консультаций.\n\n'
+        'Бережно. Конфиденциально.\n\n'
+        'Приходи , я рада тебе 🤍',
+        reply_markup=enroll
+    )
 
     async with state.proxy() as data:
         data["cons"] = cd.parse(callback_query.data)["action"]
 
-    if await state.get_state() == "UserStates:Admin":
-        pass
-    else:
-        await UserStates.Enroll.set()
+    await UserStates.Enroll.set()
 
 
 @dp.callback_query_handler(cd.filter(action='mini_group'), state=[UserStates.ChooseCat, UserStates.Admin])
 async def mini_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
 
-    if await state.get_state() == "UserStates:Admin":
-        await bot.send_message(
-            callback_query.from_user.id,
-            "Добавить, удалить, изменить мини-группу",
-            reply_markup=enroll_them_mini_admin
-        )
-    else:
-        await bot.send_message(
-            callback_query.from_user.id,
-            "Мини-группа предназначена для глубокой и активной работы по заданной теме.\n\n"
-            "В группе принимают участие до 4 человек.\n\n"
-            "Присоединиться к ближайшей группе по актуальной для тебя теме можно здесь 🔽🔽🔽",
-            reply_markup=enroll_them_mini
-        )
+    await bot.send_message(
+        callback_query.from_user.id,
+        "Мини-группа предназначена для глубокой и активной работы по заданной теме.\n\n"
+        "В группе принимают участие до 4 человек.\n\n"
+        "Присоединиться к ближайшей группе по актуальной для тебя теме можно здесь 🔽🔽🔽",
+        reply_markup=enroll_them_mini
+    )
 
     async with state.proxy() as data:
         data["cons"] = cd.parse(callback_query.data)["action"]
 
-    if await state.get_state() == "UserStates:Admin":
-        pass
-    else:
-        await UserStates.Enroll.set()
+    await UserStates.Enroll.set()
 
 
 @dp.callback_query_handler(cd.filter(action='them_group'), state=[UserStates.ChooseCat, UserStates.Admin])
 async def them_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
-
-    if await state.get_state() == "UserStates:Admin":
-        await bot.send_message(
-            callback_query.from_user.id,
-            "Добавить, удалить, изменить тематическую-группу",
-            reply_markup=enroll_them_mini_admin
-        )
-    else:
-        await bot.send_message(
-            callback_query.from_user.id,
-            "Групповые семинары и мастер -классы предназначены для проработки конкретных тем, актуальных"
-            " для всех участников.\n\n"
-            "Выбирай интересную тему , приходи и расширяй свои возможности , осознанность и формируй свой собственный "
-            "поддерживающий круг единомышленников 🙌",
-            reply_markup=subgroup_them
-        )
+    await bot.send_message(
+        callback_query.from_user.id,
+        "Групповые семинары и мастер -классы предназначены для проработки конкретных тем, актуальных"
+        " для всех участников.\n\n"
+        "Выбирай интересную тему , приходи и расширяй свои возможности , осознанность и формируй свой собственный "
+        "поддерживающий круг единомышленников 🙌",
+        reply_markup=subgroup_them
+    )
 
     async with state.proxy() as data:
         data["cons"] = cd.parse(callback_query.data)["action"]
-
-    if await state.get_state() == "UserStates:Admin":
-        pass
-    else:
-        await UserStates.Subgroup.set()
+    await UserStates.Subgroup.set()
 
 
 @dp.callback_query_handler(cd.filter(action='about_relat'), state=UserStates.Subgroup)
@@ -230,8 +196,6 @@ async def date_them_mini_callback_function(callback_query: types.CallbackQuery, 
         message = await bot.send_message(
             callback_query.from_user.id, text="Сори в этот день нет свободных слотов, выберите другой"
         )
-        await asyncio.sleep(2.5)
-        await bot.delete_message(callback_query.message.chat.id, message.message_id)
         return
     text = f"""
 Вы можете записаться в такие слоты:
@@ -306,9 +270,7 @@ async def back_callback(callback_query: types.CallbackQuery, state: FSMContext):
     async with state.proxy() as data:
         cons = data["cons"]
     print(await state.get_state())
-    if await state.get_state() == "UserStates:Admin":
-        pass
-    elif cons == "them_group":
+    if cons == "them_group":
         if await state.get_state() == "UserStates:Subgroup":
             await UserStates.ChooseCat.set()
         elif await state.get_state() == "UserStates:Enroll":

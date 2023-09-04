@@ -12,6 +12,11 @@ general_info_markup = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('Тематические группы', callback_data=cd.new("them_group"))]
 ])
 
+general_info_markup_admin = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton('Индивидуальные консультации', callback_data="admin_indCons")],
+    [InlineKeyboardButton('Мини-группы', callback_data="admin_miniGroup")],
+    [InlineKeyboardButton('Тематические группы', callback_data="admin_themGroup")]
+])
 
 # This Week's Keyboard Markup
 today = datetime.date.today()
@@ -58,21 +63,10 @@ enroll = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
 ])
 
-enroll_admin = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton('Добавить, изменить', callback_data=cd.new("enroll"))],
-    [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
-])
-
 enroll_them_mini = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('Записаться', callback_data=cd.new("enroll_them_mini"))],
     [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
 ])
-
-enroll_them_mini_admin = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton('Добавить, изменить', callback_data=cd.new("enroll_them_mini"))],
-    [InlineKeyboardButton('⬅️ Назад', callback_data="back")]
-])
-
 
 connect = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton('Связаться с психологом', url="https://t.me/Evgeniya_drugoy_vzglyad")]
@@ -83,4 +77,19 @@ next_ = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton("◀️", callback_data='next_0_back'), InlineKeyboardButton("▶️", callback_data='next_0_next')],
     [InlineKeyboardButton("Записаться", callback_data='next_0_signup')],
     [InlineKeyboardButton("⬅️ Назад", callback_data='back')]
+])
+
+choose_time = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton("◀️", callback_data='choose_0_back'), InlineKeyboardButton("▶️", callback_data='choose_0_next')],
+    [InlineKeyboardButton("Выбрать", callback_data='choose_0_choose')]
+])
+
+create_look_slots = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton("Создать ивент", callback_data=cd.new('create_slots'))],
+    [InlineKeyboardButton("Посмотреть инфу про встречи", callback_data=cd.new('look_slots'))]
+])
+
+free_occupied_slots = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton("Свободные слоты", callback_data=cd.new('free_slots'))],
+    [InlineKeyboardButton("Занятые слоты", callback_data=cd.new('occupied_slots'))]
 ])

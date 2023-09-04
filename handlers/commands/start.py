@@ -2,12 +2,10 @@ from aiogram import types
 from sqlalchemy.exc import NoResultFound
 
 from bot_tg.loader import dp, bot
-from buttons.inlines import general_info_markup
 from buttons.reply import menu_main
 
 from setup_db.sqlite_db import session
 from db_work.service.users_service import UsersService
-from states import UserStates
 
 from aiogram.dispatcher import FSMContext
 
@@ -46,13 +44,3 @@ async def start_cmd(message: types.Message, state: FSMContext) -> None:
         parse_mode='html',
         reply_markup=menu_main
     )
-
-
-@dp.message_handler(commands=['admin'], state="*")
-async def admin_cmd(message: types.Message, state: FSMContext) -> None:
-    print(message.from_user.id)
-    if message.from_user.id == 1362055393:
-        await bot.send_message(message.chat.id, "Привет женя, это твоя админка", reply_markup=general_info_markup)
-        await UserStates.Admin.set()
-    else:
-        await bot.send_message(message.chat.id, "Сори ты не админ")
