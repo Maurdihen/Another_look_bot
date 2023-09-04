@@ -5,11 +5,11 @@ from bot_tg.loader import dp, bot
 from buttons.reply import menu_main
 
 from setup_db.sqlite_db import session
-from db_work.service.users_service import UsersService
+from db_work.service.user_service import UserService
 
 from aiogram.dispatcher import FSMContext
 
-users_service = UsersService(session)
+user_service = UserService(session)
 
 
 @dp.message_handler(commands=['start'], state="*")
@@ -29,13 +29,13 @@ async def start_cmd(message: types.Message, state: FSMContext) -> None:
         user_name = user_first_name
 
     try:
-        existing_user = users_service.get_user_by_tg_id(message.from_user.id)
+        existing_user = user_service.get_user_by_tg_id(message.from_user.id)
 
         if not existing_user:
-            users_service.create_user(user_id_tg=message.from_user.id, name=user_name)
+            user_service.create_user(user_id_tg=message.from_user.id, name=user_name)
 
     except NoResultFound:
-        users_service.create_user(user_id_tg=message.from_user.id, name=user_name)
+        user_service.create_user(user_id_tg=message.from_user.id, name=user_name)
 
     await bot.send_message(
         chat_id=message.chat.id,

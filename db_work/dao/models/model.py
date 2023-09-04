@@ -1,30 +1,30 @@
-from sqlalchemy import Column, Integer, String
-from sqlalchemy import ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
 
-class Users(Base):
-    __tablename__ = "users"
+class User(Base):
+    __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    user_id_tg = Column(Integer)
-    name = Column(String)
+    tg_id = Column(Integer, unique=True)
+    full_name = Column(String, default=None)
+    phone_number = Column(String, default=None)
 
 
-class Notes(Base):
-    __tablename__ = "notes"
+class Event(Base):
+    __tablename__ = "event"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    date = Column(String)
-    time = Column(String)
-    category = Column(String)
-    subcategory = Column(String)
-
-    user = relationship("Users", back_populates="notes")
-
-
-Users.notes = relationship("Notes", back_populates="user")
+    tg_user_id = Column(Integer, ForeignKey('user.tg_id'))
+    start = Column(String(25), nullable=False)
+    end = Column(String(25), nullable=False)
+    category = Column(String, nullable=False)
+    subcategory = Column(String, default=None)
+    is_free = Column(Boolean, default=True)
+#     user = relationship("User", back_populates="event")
+#
+#
+# User.notes = relationship("Event", back_populates="user")
