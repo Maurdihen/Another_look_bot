@@ -1,4 +1,6 @@
 from typing import Type
+from datetime import datetime
+import pytz
 
 from sqlalchemy.orm import Session
 from db_work.dao.models.model import Event
@@ -15,7 +17,11 @@ class EventDAO:
         return self.session.query(Event).filter_by(tg_user_id=tg_user_id).all()
 
     def get_free_events(self) -> list[Type[Event]]:
-        return self.session.query(Event).filter_by(is_free=True).all()
+        current_time = datetime.now(pytz.timezone('Europe/Moscow'))
+        return self.session.query(Event).filter(
+            Event.is_free == True,
+            Event.start >= current_time
+        ).all()
 
     def get_all_events(self) -> list[Type[Event]]:
         return self.session.query(Event).all()
