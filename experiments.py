@@ -1,26 +1,25 @@
-from aiogram import Bot, Dispatcher, types
-from aiogram.contrib.middlewares.logging import LoggingMiddleware
-import asyncio
+from db_work.crud.implemented import admin_request
+from db_work.crud.implemented import user_request
 
-API_TOKEN = '5978072325:AAGJL5l2a04ceKw7rSRtwUK8E8DkGNNH1Ek'
+event_data = {
+    "tg_user_id": "892189279",
+    "start": "2023-08-31T12:00:00+03:00",
+    "end": "2023-08-31T13:00:00+03:00",
+    "category": "Мини-группа",
+    "subcategory": None,
+    "is_free": False,
+}
 
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
-dp.middleware.setup(LoggingMiddleware())
-
-
-@dp.message_handler(content_types=types.ContentTypes.TEXT)
-async def handle_text_message(message: types.Message):
-    await message.reply(f"Вы отправили текстовое сообщение: {message.text}")
-
-
-@dp.message_handler(content_types=types.ContentTypes.CONTACT)
-async def handle_contact(message: types.Message):
-    contact = message.contact
-    await message.reply(f"Вы отправили контакт:\nИмя: {contact.first_name}\nНомер телефона: {contact.phone_number}")
-
+user_data = {
+    "tg_id": "892189279",
+    "full_name": "тест",
+    "phone_number": "43231231231",
+}
 
 if __name__ == '__main__':
-    from aiogram import executor
-    loop = asyncio.get_event_loop()
-    executor.start_polling(dp, loop=loop, skip_updates=True)
+    # admin_request.create_event(event_data)
+    print(admin_request.get_free_events())
+    # user_request.update_user_info(update_data=user_data)
+    # print(user_request.get_user_info())
+    print()
+    print("Everything is good")

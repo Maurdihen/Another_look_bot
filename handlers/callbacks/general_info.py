@@ -1,14 +1,10 @@
 import asyncio
-import datetime
 
 from aiogram import types
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot_tg.loader import dp, bot
 from buttons.inlines import this_weeks_button_markup, cd, subgroup_them, enroll, next_, enroll_them_mini
-from calendar_api.individual_calendar import IndividualCalendar
-from calendar_api.thematic_calendar import ThematicCalendar
-from calendar_api.group_calendar import GroupCalendar
 from utils import convert_date
 from states import UserStates
 
@@ -36,9 +32,10 @@ async def ind_cons_callback(callback_query: types.CallbackQuery, state: FSMConte
     await UserStates.Enroll.set()
 
 
-@dp.callback_query_handler(cd.filter(action='mini_group'), state=UserStates.ChooseCat)
+@dp.callback_query_handler(cd.filter(action='mini_group'), state=[UserStates.ChooseCat, UserStates.Admin])
 async def mini_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
+
     await bot.send_message(
         callback_query.from_user.id,
         "Мини-группа предназначена для глубокой и активной работы по заданной теме.\n\n"
@@ -53,7 +50,7 @@ async def mini_cons_callback(callback_query: types.CallbackQuery, state: FSMCont
     await UserStates.Enroll.set()
 
 
-@dp.callback_query_handler(cd.filter(action='them_group'), state=UserStates.ChooseCat)
+@dp.callback_query_handler(cd.filter(action='them_group'), state=[UserStates.ChooseCat, UserStates.Admin])
 async def them_cons_callback(callback_query: types.CallbackQuery, state: FSMContext):
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(
@@ -67,7 +64,6 @@ async def them_cons_callback(callback_query: types.CallbackQuery, state: FSMCont
 
     async with state.proxy() as data:
         data["cons"] = cd.parse(callback_query.data)["action"]
-
     await UserStates.Subgroup.set()
 
 
@@ -89,7 +85,7 @@ async def subgroup_relat_them_callback(callback_query: types.CallbackQuery, stat
     async with state.proxy() as data:
         data["subgroup"] = cd.parse(callback_query.data)["action"]
 
-    await UserStates.Enroll.set()
+    await UserStates.ChooseDay.set()
 
 
 @dp.callback_query_handler(cd.filter(action='self_realization'), state=UserStates.Subgroup)
@@ -106,7 +102,7 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
     async with state.proxy() as data:
         data["subgroup"] = cd.parse(callback_query.data)["action"]
 
-    await UserStates.Enroll.set()
+    await UserStates.ChooseDay.set()
 
 
 @dp.callback_query_handler(cd.filter(action='finance'), state=UserStates.Subgroup)
@@ -123,7 +119,7 @@ async def subgroup_realization_them_callback(callback_query: types.CallbackQuery
     async with state.proxy() as data:
         data["subgroup"] = cd.parse(callback_query.data)["action"]
 
-    await UserStates.Enroll.set()
+    await UserStates.ChooseDay.set()
 
 
 @dp.callback_query_handler(cd.filter(action="enroll"), state=UserStates.Enroll)
@@ -200,8 +196,6 @@ async def date_them_mini_callback_function(callback_query: types.CallbackQuery, 
         message = await bot.send_message(
             callback_query.from_user.id, text="Сори в этот день нет свободных слотов, выберите другой"
         )
-        await asyncio.sleep(2.5)
-        await bot.delete_message(callback_query.message.chat.id, message.message_id)
         return
     text = f"""
 Вы можете записаться в такие слоты:
@@ -236,8 +230,6 @@ async def next_callback(callback_query: types.CallbackQuery, state: FSMContext):
             data["event"] = event
 
         await UserStates.GetNumber.set()
-        await asyncio.sleep(2.5)
-        await bot.delete_message(callback_query.message.chat.id, message.message_id)
         return
     elif callback_query.data.split('_')[2] == "back":
         next_message_number = message_number - 1
@@ -282,9 +274,9 @@ async def back_callback(callback_query: types.CallbackQuery, state: FSMContext):
         if await state.get_state() == "UserStates:Subgroup":
             await UserStates.ChooseCat.set()
         elif await state.get_state() == "UserStates:Enroll":
-            await UserStates.Subgroup.set()
+            await UserStates.ChooseCat.set()
         elif await state.get_state() == "UserStates:ChooseDay":
-            await UserStates.Enroll.set()
+            await UserStates.Subgroup.set()
         elif await state.get_state() == "UserStates:ChooseTime":
             await UserStates.Enroll.set()
     elif cons == "mini_group":

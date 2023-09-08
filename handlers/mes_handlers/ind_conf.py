@@ -58,13 +58,13 @@ async def valid_phone_number(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         event = data["event"]
         cons = data["cons"]
-        mesage_id = data["message_id"]
+        message_id = data["message_id"]
         try:
             subgroup = data["subgroup"]
         except:
             subgroup = None
 
-    await bot.delete_message(message.chat.id, mesage_id)
+    await bot.delete_message(message.chat.id, message_id)
 
     if cons == "ind_cons":
         cons = "Индивидуальная консультация"
@@ -82,6 +82,7 @@ async def valid_phone_number(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         text = data.get("text")
     event_data = {
+        "user_id": message.from_user.id,
         "summary": cons,
         "subgroup": subgroup,
         "name": text,
@@ -141,6 +142,7 @@ async def my_number(message: Message, state: FSMContext):
     async with state.proxy() as data:
         text = data.get("text")
     event_data = {
+        "user_id": message.from_user.id,
         "summary": cons,
         "subgroup": subgroup,
         "name": text,
