@@ -1,17 +1,25 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
+
+users_events = Table(
+    "users_events",
+    Column("user_id", Integer(), ForeignKey("user.id")),
+    Column("event_id", Integer(), ForeignKey("event.id"))
+)
 
 
 class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    tg_id = Column(Integer, unique=True)
+    tg_id = Column(Integer)
     full_name = Column(String, default=None)
     phone_number = Column(String, default=None)
+
+    events = relationship('Event', secondary=users_events, backref=backref('user', lazy='dynamic'))
 
 
 class Event(Base):
@@ -19,12 +27,10 @@ class Event(Base):
 
     id = Column(Integer, primary_key=True)
     tg_user_id = Column(Integer, ForeignKey('user.tg_id'))
-    start = Column(String(25), nullable=False)
-    end = Column(String(25), nullable=False)
-    category = Column(String, nullable=False)
-    subcategory = Column(String, default=None)
+    start = Column(String(8))
+    end = Column(String(8))
+    category = Column(String)
+    subcategory = Column(String)
     is_free = Column(Boolean, default=True)
-#     user = relationship("User", back_populates="event")
-#
-#
-# User.notes = relationship("Event", back_populates="user")
+
+    users = relationship('User', secondary=users_events, backref=backref('event', lazy='dynamic'))
