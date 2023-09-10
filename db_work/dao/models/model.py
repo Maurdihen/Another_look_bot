@@ -26,7 +26,6 @@ class Event(Base):
     __tablename__ = "event"
 
     id = Column(Integer, primary_key=True)
-    tg_user_id = Column(Integer, ForeignKey('user.tg_id'))
     start = Column(String(8))
     end = Column(String(8))
     category = Column(String)

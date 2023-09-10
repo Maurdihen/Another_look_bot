@@ -7,12 +7,12 @@ class AdminRequest:
         for event in events:
             event_data = {
                 "id": event.id,
-                "tg_user_id": event.tg_user_id,
                 "start": event.start,
                 "end": event.end,
                 "category": event.category,
                 "subcategory": event.subcategory,
-                "is_free": event.is_free
+                "is_free": event.is_free,
+                "users": [x for x in event.users]
             }
             self.events_list.append(event_data)
         return self.events_list
