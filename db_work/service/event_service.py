@@ -36,7 +36,7 @@ class EventService:
         if "is_free" in data:
             event.is_free = data.get("is_free")
 
-        if data["tg_user_id"] not in event.users:
+        if data.get("tg_user_id") not in event.users:
             event.users.append(data["tg_user_id"])
 
         return self.event_dao.update_event(event)

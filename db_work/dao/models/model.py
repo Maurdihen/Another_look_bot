@@ -6,6 +6,7 @@ Base = declarative_base()
 
 users_events = Table(
     "users_events",
+    Base.metadata,
     Column("user_id", Integer(), ForeignKey("user.id")),
     Column("event_id", Integer(), ForeignKey("event.id"))
 )
@@ -26,8 +27,8 @@ class Event(Base):
     __tablename__ = "event"
 
     id = Column(Integer, primary_key=True)
-    start = Column(String(8))
-    end = Column(String(8))
+    start = Column(String(25))
+    end = Column(String(25))
     category = Column(String)
     subcategory = Column(String)
     is_free = Column(Boolean, default=True)
