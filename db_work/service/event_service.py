@@ -25,8 +25,6 @@ class EventService:
         return self.event_dao.create_event(data)
 
     def update_event(self, event, data: dict) -> None:
-        if "tg_user_id" in data:
-            event.tg_user_id = data.get("tg_user_id")
         if "start" in data:
             event.start = data.get("start")
         if "end" in data:
@@ -37,6 +35,9 @@ class EventService:
             event.subcategory = data.get("subcategory")
         if "is_free" in data:
             event.is_free = data.get("is_free")
+
+        if data["tg_user_id"] not in event.users:
+            event.users.append(data["tg_user_id"])
 
         return self.event_dao.update_event(event)
 
