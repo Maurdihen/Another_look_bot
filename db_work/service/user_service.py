@@ -24,4 +24,7 @@ class UserService:
         if data.get("phone_number"):
             user.phone_number = data["phone_number"]
 
+        if data["event"] not in user.events:
+            user.events.append(data["event"])
+
         self.user_dao.update_user(user)

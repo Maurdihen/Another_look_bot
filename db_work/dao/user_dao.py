@@ -16,6 +16,7 @@ class UserDAO:
 
     def create_user(self, data) -> User:
         new_user = User(**data)
+        new_user.events = []
 
         self.session.add(new_user)
         self.session.commit()
