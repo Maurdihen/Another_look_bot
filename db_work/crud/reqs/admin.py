@@ -1,29 +1,28 @@
 class AdminRequest:
     def __init__(self, service):
         self._event_service = service
-        self._events_list = []
 
-    def _output(self, events):
-        for event in events:
-            event_data = {
-                "id": event.id,
-                "start": event.start,
-                "end": event.end,
-                "category": event.category,
-                "subcategory": event.subcategory,
-                "users": []
-            }
-            self._events_list.append(event_data)
+    # def _output(self, events):
+    #     out = []
+    #     for event in events:
+    #         event_data = {
+    #             "id": event.id,
+    #             "start": event.start,
+    #             "end": event.end,
+    #             "category": event.category,
+    #             "subcategory": event.subcategory,
+    #             "users": []
+    #         }
+    #         out.append(event_data)
+    #     return out
 
     def get_all_events(self):
         events = self._event_service.get_all_events()
-        self._output(events)
-        return self._events_list
+        return events
 
-    # def get_free_events(self):
-    #     events = self._event_service.get_free_events()
-    #     self._output(events)
-    #     return self.events_list
+    def get_free_events(self):
+        events = self._event_service.get_free_events()
+        return events
 
     def create_event(self, event_data):
         return self._event_service.create_event(event_data)
