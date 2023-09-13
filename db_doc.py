@@ -146,9 +146,16 @@ if __name__ == '__main__':
     # print([x.id for x in events])
     # event = events[0]
     # print(event.users)
+
     # event_request_1 = EventRequest(event.id)
     # print(event_request_1.get_event_info())
     # event_request_1.book_event({"event": new_event, "user": user999})
+    # print(user_request_999.get_user_info())
+    # print(event_request_1.get_event_info())
+    # user_request_999.update_user_info({"full_name": "Kirill Kirillov"})
+    # print(user_request_999.get_user_info())
+    # print(event_request_1.get_event_info())
+
     # print(event_request_1.get_event_info())
     # event_request_1.cancel_event({"event": new_event, "user": user999})
     # print(event_request_1.get_event_info())
