@@ -33,13 +33,19 @@ class EventService:
             event.category = data.get("category")
         if "subcategory" in data:
             event.subcategory = data.get("subcategory")
-        if "is_free" in data:
-            event.is_free = data.get("is_free")
+        # if "is_free" in data:
+        #     event.is_free = data.get("is_free")
 
-        if data.get("tg_user_id") not in event.users:
-            event.users.append(data["tg_user_id"])
+        if "user" not in data:
+            event.users.append(data.get("user"))
 
-        return self.event_dao.update_event(event)
+        self.event_dao.update_event(event)
+
+    def book_event(self):
+        ...
+
+    def cancel_event(self):
+        ...
 
     def delete_event(self, base_id: int) -> None:
-        return self.event_dao.delete_event(base_id)
+        self.event_dao.delete_event(base_id)
