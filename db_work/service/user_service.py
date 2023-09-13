@@ -22,7 +22,7 @@ class UserService:
         if "full_name" in data:
             user.full_name = data.get("full_name")
         if "phone_number" in data:
-            user.full_name = data.get("phone_number")
+            user.phone_number = data.get("phone_number")
 
         if "event" not in user.events:
             user.events.append(data["event"])
