@@ -22,11 +22,17 @@ class EventService:
         return self.event_dao.get_all_events()
 
     def create_event(self, data: dict) -> Event:
+        category = data.get("category")
+        if category == "Индивидуальная встреча":
+            data["user_limit"] = 1
+        if category == "Мини-группа":
+            data["user_limit"] = 5
+        if category == "Тематическая группа":
+            data["user_limit"] = -1
+
         return self.event_dao.create_event(data)
 
     def update_event(self, event, data: dict) -> None:
-        if "tg_user_id" in data:
-            event.tg_user_id = data.get("tg_user_id")
         if "start" in data:
             event.start = data.get("start")
         if "end" in data:
@@ -38,7 +44,25 @@ class EventService:
         if "is_free" in data:
             event.is_free = data.get("is_free")
 
-        return self.event_dao.update_event(event)
+        if u := data.get("user"):
+            if u not in event.users:
+                event.users.append(u)
+
+        self.event_dao.update_event(event)
+
+    def book_event(self, data) -> None:
+        event = data.get("event")
+        event.users.append(data.get("user"))
+        if len(event.users) == event.user_limit:
+            event.is_free = False
+        self.event_dao.update_event(event)
+
+    def cancel_event(self, data) -> None:
+        event = data.get("event")
+        idx = event.users.index(data.get("user"))
+        event.users.pop(idx)
+        event.is_free = True
+        self.event_dao.update_event(event)
 
     def delete_event(self, base_id: int) -> None:
-        return self.event_dao.delete_event(base_id)
+        self.event_dao.delete_event(base_id)

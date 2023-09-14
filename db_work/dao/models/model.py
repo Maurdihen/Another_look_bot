@@ -1,30 +1,67 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
+
+users_events = Table(
+    "users_events",
+    Base.metadata,
+    Column("user_id", Integer(), ForeignKey("user.id")),
+    Column("event_id", Integer(), ForeignKey("event.id"))
+)
 
 
 class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    tg_id = Column(Integer, unique=True)
+    tg_id = Column(Integer)
     full_name = Column(String, default=None)
     phone_number = Column(String, default=None)
+
+    events = relationship('Event', secondary=users_events, backref='users')
+
+    def __repr__(self):
+        info = f"User(id={self.id}, tg_id={self.tg_id}, full_name="
+
+        if self.full_name:
+            info += f"'{self.full_name}', phone_number="
+        else:
+            info += f"{self.full_name}, phone_number="
+
+        if self.phone_number:
+            info += f"'{self.phone_number}')"
+        else:
+            info += f"{self.phone_number})"
+
+        return info
+
+    def __cmp__(self, other):
+        return self.id == other.id
 
 
 class Event(Base):
     __tablename__ = "event"
 
     id = Column(Integer, primary_key=True)
-    tg_user_id = Column(Integer, ForeignKey('user.tg_id'))
-    start = Column(String(25), nullable=False)
-    end = Column(String(25), nullable=False)
-    category = Column(String, nullable=False)
-    subcategory = Column(String, default=None)
+    start = Column(String(25))
+    end = Column(String(25))
+    category = Column(String)
+    subcategory = Column(String)
     is_free = Column(Boolean, default=True)
-#     user = relationship("User", back_populates="event")
-#
-#
-# User.notes = relationship("Event", back_populates="user")
+    user_limit = Column(Integer)
+
+    def __repr__(self):
+        info = f"Event(id={self.id}, start='{self.start}', end='{self.end}', category='{self.category}', subcategory="
+
+        if self.subcategory:
+            info += f"'{self.subcategory}'"
+        else:
+            info += f"{self.subcategory}"
+
+        info += f", is_free={self.is_free})"
+        return info
+
+    def __cmp__(self, other):
+        return self.id == other.id

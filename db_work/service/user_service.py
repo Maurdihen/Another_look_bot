@@ -19,9 +19,13 @@ class UserService:
         return self.user_dao.create_user(data)
 
     def update_user(self, user, data) -> None:
-        if data.get("full_name"):
-            user.full_name = data["full_name"]
-        if data.get("phone_number"):
-            user.phone_number = data["phone_number"]
+        if "full_name" in data:
+            user.full_name = data.get("full_name")
+        if "phone_number" in data:
+            user.phone_number = data.get("phone_number")
+
+        if e := data.get("event"):
+            if e not in user.events:
+                user.events.append(e)
 
         self.user_dao.update_user(user)

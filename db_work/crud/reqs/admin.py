@@ -1,39 +1,38 @@
 class AdminRequest:
     def __init__(self, service):
-        self.event_service = service
-        self.events_list = []
+        self._event_service = service
 
-    def _output(self, events):
-        for event in events:
-            event_data = {
-                "id": event.id,
-                "tg_user_id": event.tg_user_id,
-                "start": event.start,
-                "end": event.end,
-                "category": event.category,
-                "subcategory": event.subcategory,
-                "is_free": event.is_free
-            }
-            self.events_list.append(event_data)
-        return self.events_list
+    # def _output(self, events):
+    #     out = []
+    #     for event in events:
+    #         event_data = {
+    #             "id": event.id,
+    #             "start": event.start,
+    #             "end": event.end,
+    #             "category": event.category,
+    #             "subcategory": event.subcategory,
+    #             "users": []
+    #         }
+    #         out.append(event_data)
+    #     return out
 
     def get_all_events(self):
-        events = self.event_service.get_all_events()
-        return self._output(events)
+        events = self._event_service.get_all_events()
+        return events
 
     def get_free_events(self):
-        events = self.event_service.get_free_events()
-        return self._output(events)
+        events = self._event_service.get_free_events()
+        return events
 
     def create_event(self, event_data):
-        return self.event_service.create_event(event_data)
+        return self._event_service.create_event(event_data)
 
-    def update_event(self, event_id, update_data):
-        event = self.event_service.get_event_by_bid(event_id)
-        if event:
-            self.event_service.update_event(event, update_data)
+    # def update_event(self, event_id, update_data):
+    #     event = self._event_service.get_event_by_bid(event_id)
+    #     if event:
+    #         self._event_service.update_event(event, update_data)
 
     def delete_event(self, event_id):
-        event = self.event_service.get_event_by_bid(event_id)
+        event = self._event_service.get_event_by_bid(event_id)
         if event:
-            self.event_service.delete_event(event_id)
+            self._event_service.delete_event(event_id)
