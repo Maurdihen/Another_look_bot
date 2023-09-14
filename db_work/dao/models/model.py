@@ -31,11 +31,14 @@ class User(Base):
             info += f"{self.full_name}, phone_number="
 
         if self.phone_number:
-            info += f"'{self.phone_number}'"
+            info += f"'{self.phone_number}')"
         else:
-            info += f"{self.phone_number}"
+            info += f"{self.phone_number})"
 
         return info
+
+    def __cmp__(self, other):
+        return self.id == other.id
 
 
 class Event(Base):
@@ -46,14 +49,19 @@ class Event(Base):
     end = Column(String(25))
     category = Column(String)
     subcategory = Column(String)
-    # is_free = Column(Boolean, default=True)
+    is_free = Column(Boolean, default=True)
+    user_limit = Column(Integer)
 
     def __repr__(self):
         info = f"Event(id={self.id}, start='{self.start}', end='{self.end}', category='{self.category}', subcategory="
 
         if self.subcategory:
-            info += f"'{self.subcategory}')"
+            info += f"'{self.subcategory}'"
         else:
-            info += f"{self.subcategory})"
+            info += f"{self.subcategory}"
 
+        info += f", is_free={self.is_free})"
         return info
+
+    def __cmp__(self, other):
+        return self.id == other.id
