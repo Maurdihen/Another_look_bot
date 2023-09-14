@@ -28,7 +28,6 @@ class EventDAO:
 
     def create_event(self, data) -> Event:
         new_event = Event(**data)
-        new_event.users = []
 
         self.session.add(new_event)
         self.session.commit()

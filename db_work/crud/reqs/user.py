@@ -25,6 +25,7 @@ class UserRequest:
 
     def get_user_info(self):
         return {
+            "id": self._user.id,
             "full_name": self._user.full_name,
             "phone_number": self._user.phone_number,
             "events": [x for x in self._user.events]
